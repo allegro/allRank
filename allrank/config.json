@@ -1,0 +1,81 @@
+{
+  "model":
+  {
+    "fc_model":
+    {
+      "sizes":
+      [
+        64,
+        64,
+        32
+      ],
+      "input_norm": true,
+      "activation": null,
+      "dropout": 0.1
+    },
+    "transformer":
+    {
+      "N": 2,
+      "d_ff": 128,
+      "h": 2,
+      "positional_encoding": null,
+      "dropout": 0.2
+    },
+    "post_model":
+    {
+      "output_activation": null,
+      "d_output": 1
+    }
+  },
+  "data":
+  {
+    "path": "dataset_path",
+    "validation_ds_role": "vali",
+    "fold": "1",
+    "num_workers": 1,
+    "batch_size": 2,
+    "listing_length": 20
+  },
+  "optimizer":
+  {
+    "name": "Adam",
+    "args":
+    {
+      "lr": 0.001
+    }
+  },
+  "lr_scheduler":
+  {
+    "name": "StepLR",
+    "args":
+    {
+      "step_size": 1,
+      "gamma": 0.9
+    }
+  },
+  "training":
+  {
+    "epochs": 10,
+    "early_stopping_patience": 2,
+    "gradient_clipping_norm": null
+  },
+  "metrics":
+  [
+    "ndcg@5",
+    "mrr@5"
+  ],
+"loss":
+  {
+    "name": "listMLE",
+    "args": {}
+  },
+"val_metric": "ndcg@5",
+"detect_anomaly": false,
+"expected_metrics" :
+  {
+  "val":
+    {
+      "ndcg@5": 0.0
+    }
+  }
+}
