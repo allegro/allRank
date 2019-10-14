@@ -22,12 +22,12 @@ from allrank.utils.python_utils import dummy_context_mgr
 
 
 def parse_args() -> Namespace:
-    parser = ArgumentParser("Allrank")
+    parser = ArgumentParser("allRank")
     parser.add_argument("--output", help="Base output path for all experiments", required=True)
     parser.add_argument("--run-id", help="Name of this run to be recorded (must be unique within output dir)",
                         required=True)
     parser.add_argument("--config-file-name", required=True, type=str,
-                        help="name of json file with config")
+                        help="Name of json file with config")
 
     return parser.parse_args()
 
