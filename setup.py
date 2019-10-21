@@ -23,5 +23,6 @@ setup(
     description="allRank is a framework for training learning-to-rank neural models",
     packages=find_packages(exclude=["tests"]),
     package_data={"allrank": ["config.json"]},
+    entry_points={"console_scripts": ['allRank = allrank.main:run']},
     zip_safe=False,
 )
