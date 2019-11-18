@@ -81,18 +81,22 @@ class Config:
     def from_json(cls, config_path):
         with open(config_path) as config_file:
             config = json.load(config_file)
-            config["model"] = ModelConfig(**config["model"])
-            if config["model"].transformer:
-                config["model"].transformer = TransformerConfig(**config["model"].transformer)
-                if config["model"].transformer.positional_encoding:
-                    config["model"].transformer.positional_encoding = PositionalEncoding(
-                        **config["model"].transformer.positional_encoding)
-            config["data"] = DataConfig(**config["data"])
-            config["optimizer"] = NameArgsConfig(**config["optimizer"])
-            config["training"] = TrainingConfig(**config["training"])
-            config["metrics"] = cls._parse_metrics(config["metrics"])
-            config["lr_scheduler"] = NameArgsConfig(**config["lr_scheduler"])
-            config["loss"] = NameArgsConfig(**config["loss"])
+            return Config.from_dict(config)
+
+    @classmethod
+    def from_dict(cls, config):
+        config["model"] = ModelConfig(**config["model"])
+        if config["model"].transformer:
+            config["model"].transformer = TransformerConfig(**config["model"].transformer)
+            if config["model"].transformer.positional_encoding:
+                config["model"].transformer.positional_encoding = PositionalEncoding(
+                    **config["model"].transformer.positional_encoding)
+        config["data"] = DataConfig(**config["data"])
+        config["optimizer"] = NameArgsConfig(**config["optimizer"])
+        config["training"] = TrainingConfig(**config["training"])
+        config["metrics"] = cls._parse_metrics(config["metrics"])
+        config["lr_scheduler"] = NameArgsConfig(**config["lr_scheduler"])
+        config["loss"] = NameArgsConfig(**config["loss"])
         return cls(**config)
 
     @staticmethod

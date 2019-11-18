@@ -7,7 +7,7 @@ reqs = [
     "torch==1.2.0",
     "torchvision==0.4.0",
     "scikit-learn==0.21.3",
-    "pandas==0.25.0",
+    "pandas==0.24.2",
     "numpy==1.16.1",
     "scipy>=1.2.0",
     "attrs==18.2.0",
