@@ -19,15 +19,15 @@ class PathsContainer:
     config_path = attrib(type=str)
 
     @classmethod
-    def from_args(cls, output, run_id, config_file_name):
+    def from_args(cls, output, run_id, config_file_name, package_name="allrank"):
         base_output_path = get_path_from_local_uri(output)
         output_dir = os.path.join(base_output_path, "results", run_id)
         tensorboard_output_path = os.path.join(base_output_path, "tb_evals", "single", run_id)
         config_path = os.path.join(config_file_name)
         if not os.path.exists(config_path):
-            logger.info("extracting config file path from package")
+            logger.info("extracting config file path from package {}".format(package_name))
             config_path = resource_filename(Requirement.parse(
-                "allrank"), os.path.join("allrank", config_file_name))
+                package_name), os.path.join(package_name, config_file_name))
         logger.info("will read config from {}".format(config_path))
         return cls(base_output_path, output_dir, tensorboard_output_path, config_path)
 
