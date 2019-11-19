@@ -3,16 +3,24 @@ import torch
 from allrank.data.dataset_loading import PADDED_Y_VALUE
 from allrank.models.losses import DEFAULT_EPS
 
-"""Here are the NDCGLoss1 and NDCGLoss2(++) losses from The LambdaLoss Framework for Ranking Metric Optimization.
-Please note that we are sticking to array operations most of the time, only applying a padding mask at the very end.
-The code is therefore close to the original formulations but multiple clamps were needed not to alarm PyTorch anomaly checks.
 
-We use notation from the original paper, hence the iDCG is maxDCG etc.
-"""
-
-
-def lambdaLoss(y_pred, y_true, padded_value_indicator=PADDED_Y_VALUE, weighing_scheme=None, k=5, sigma=1., mu=10.,
+def lambdaLoss(y_pred, y_true, eps=DEFAULT_EPS, padded_value_indicator=PADDED_Y_VALUE, weighing_scheme=None, k=None, sigma=1., mu=10.,
                reduction="sum", reduction_log="binary"):
+    """
+    LambdaLoss framework for LTR loss implementations, introduced in "The LambdaLoss Framework for Ranking Metric Optimization".
+    Contains implementations of different weighing schemes corresponding to e.g. LambdaRank or RankNet.
+    :param y_pred: predictions from the model, shape [batch_size, listing_length]
+    :param y_true: ground truth labels, shape [batch_size, listing_length]
+    :param eps: epsilon value
+    :param padded_value_indicator: an indicator of the y_true index containing a padded item, e.g. -1
+    :param weighing_scheme: a string corresponding to a name of one of the weighing schemes
+    :param k: ranking truncation position
+    :param sigma: score difference weight used in the sigmoid function
+    :param mu: optional weight used in NDCGLoss2++ weighing scheme
+    :param reduction: losses reduction method, could be either sum or mean
+    :param reduction_log: logarithm variant used prior to masking and loss reduction, either binary or natural
+    :return: loss value
+    """
     device = y_pred.device
     y_pred = y_pred.clone()
     y_true = y_true.clone()
@@ -33,8 +41,8 @@ def lambdaLoss(y_pred, y_true, padded_value_indicator=PADDED_Y_VALUE, weighing_s
     if weighing_scheme != "ndcgLoss1_scheme":
         padded_pairs_mask = padded_pairs_mask & (true_diffs > 0)
 
-    ndcg_at_k_idxs = torch.arange(y_pred.shape[1], device=device) < k
-    ndcg_at_k_mask = ndcg_at_k_idxs[:, None] | ndcg_at_k_idxs[None, :]
+    ndcg_at_k_mask = torch.zeros((y_pred.shape[1], y_pred.shape[1]), dtype=torch.bool, device=device)
+    ndcg_at_k_mask[:k, :k] = 1
 
     # Here we clamp the -infs to get correct gains and ideal DCGs (maxDCGs)
     true_sorted_by_preds.clamp_(min=0.)
@@ -43,19 +51,19 @@ def lambdaLoss(y_pred, y_true, padded_value_indicator=PADDED_Y_VALUE, weighing_s
     # Here we find the gains, discounts and ideal DCGs per listing.
     pos_idxs = torch.arange(1, y_pred.shape[1] + 1).to(device)
     D = torch.log2(1. + pos_idxs.float())[None, :]
-    maxDCGs = torch.sum(((torch.pow(2, y_true_sorted) - 1) / D)[:, :k], dim=-1).clamp(min=DEFAULT_EPS)
+    maxDCGs = torch.sum(((torch.pow(2, y_true_sorted) - 1) / D)[:, :k], dim=-1).clamp(min=eps)
     G = (torch.pow(2, true_sorted_by_preds) - 1) / maxDCGs[:, None]
 
     # Here we apply appropriate weighing scheme - ndcgLoss1, ndcgLoss2, ndcgLoss2++ or no weights (=1.0)
     if weighing_scheme is None:
         weights = 1.
     else:
-        weights = WEIGHING_SCHEMES[weighing_scheme](G, D, mu, true_sorted_by_preds)  # type: ignore
+        weights = globals()[weighing_scheme](G, D, mu, true_sorted_by_preds)  # type: ignore
 
     # We are clamping the array entries to maintain correct backprop (log(0) and division by 0)
     scores_diffs = (y_pred_sorted[:, :, None] - y_pred_sorted[:, None, :]).clamp(min=-1e8, max=1e8)
     scores_diffs[torch.isnan(scores_diffs)] = 0.
-    weighted_probas = (torch.sigmoid(sigma * scores_diffs).clamp(min=DEFAULT_EPS) ** weights).clamp(min=DEFAULT_EPS)
+    weighted_probas = (torch.sigmoid(sigma * scores_diffs).clamp(min=eps) ** weights).clamp(min=eps)
     if reduction_log == "natural":
         losses = torch.log(weighted_probas)
     elif reduction_log == "binary":
@@ -105,14 +113,3 @@ def rankNetWeightedByGTDiff_scheme(G, D, *args):
 
 def rankNetWeightedByGTDiffPowed_scheme(G, D, *args):
     return torch.abs(torch.pow(args[1][:, :, None], 2) - torch.pow(args[1][:, None, :], 2))
-
-
-WEIGHING_SCHEMES = {
-    "ndcgLoss1_scheme": ndcgLoss1_scheme,
-    "ndcgLoss2_scheme": ndcgLoss2_scheme,
-    "lamdbaRank_scheme": lamdbaRank_scheme,
-    "ndcgLoss2PP_scheme": ndcgLoss2PP_scheme,
-    "rankNet_scheme": rankNet_scheme,
-    "rankNetWeightedByGTDiff_scheme": rankNetWeightedByGTDiff_scheme,
-    "rankNetWeightedByGTDiffPowed_scheme": rankNetWeightedByGTDiffPowed_scheme
-}

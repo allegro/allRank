@@ -6,17 +6,37 @@ from torch.nn import BCEWithLogitsLoss
 from allrank.data.dataset_loading import PADDED_Y_VALUE
 
 
-def rankNet_weightByGTDiff(y_pred, y_true, padded_value_indicator=PADDED_Y_VALUE):  # dimensions: [batch, listing]
+def rankNet_weightByGTDiff(y_pred, y_true, padded_value_indicator=PADDED_Y_VALUE):
+    """
+    Wrapper for RankNet employing weighing by ground truth values differences.
+    :param y_pred: predictions from the model, shape [batch_size, listing_length]
+    :param y_true: ground truth labels, shape [batch_size, listing_length]
+    :param padded_value_indicator: an indicator of the y_true index containing a padded item, e.g. -1
+    :return: loss value
+    """
     return rankNet(y_pred, y_true, padded_value_indicator, weight_by_diff=True)
 
 
-def rankNet_weightByGTDiff_pow(y_pred, y_true, padded_value_indicator=PADDED_Y_VALUE):  # dimensions: [batch, listing]
+def rankNet_weightByGTDiff_pow(y_pred, y_true, padded_value_indicator=PADDED_Y_VALUE):
+    """
+    Wrapper for RankNet employing weighing by differences of ground truth values to the power of 2.
+    :param y_pred: predictions from the model, shape [batch_size, listing_length]
+    :param y_true: ground truth labels, shape [batch_size, listing_length]
+    :param padded_value_indicator: an indicator of the y_true index containing a padded item, e.g. -1
+    :return: loss value
+    """
     return rankNet(y_pred, y_true, padded_value_indicator, weight_by_diff=False, weight_by_diff_powed=True)
 
 
-def rankNet(y_pred, y_true, padded_value_indicator=PADDED_Y_VALUE,
-            weight_by_diff=False, weight_by_diff_powed=False):  # dimensions: [batch, listing]
-
+def rankNet(y_pred, y_true, padded_value_indicator=PADDED_Y_VALUE, weight_by_diff=False, weight_by_diff_powed=False):
+    """
+    RankNet loss introduced in "Learning to Rank using Gradient Descent".
+    :param y_pred: predictions from the model, shape [batch_size, listing_length]
+    :param y_true: ground truth labels, shape [batch_size, listing_length]
+    :param weight_by_diff: flag indicating whether to weight the score differences by ground truth differences.
+    :param weight_by_diff_powed: flag indicating whether to weight the score differences by ground truth squared differences.
+    :return: loss value
+    """
     y_pred = y_pred.clone()
     y_true = y_true.clone()
 

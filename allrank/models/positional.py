@@ -1,3 +1,8 @@
+"""
+Code in this file was adapted from "The Annotated Transformer" by Harvard NLP.
+http://nlp.seas.harvard.edu/2018/04/03/attention.html
+"""
+
 import math
 from typing import Optional
 
@@ -8,9 +13,15 @@ from allrank.config import PositionalEncoding
 
 
 class FixedPositionalEncoding(nn.Module):
-    "Implement the PE function."
-
+    """
+    Class implementing fixed positional encodings.
+    Fixed positional encodings up to max_len position are computed only once - during object construction.
+    """
     def __init__(self, d_model: int, max_len=5000):
+        """
+        :param d_model: dimensionality of the embeddings
+        :param max_len: maximum length of the sequence
+        """
         super().__init__()
 
         # Compute the positional encodings once in log space.
@@ -25,6 +36,13 @@ class FixedPositionalEncoding(nn.Module):
         self.register_buffer('pe', pe)
 
     def forward(self, x, mask, indices):
+        """
+        Forward pass through the FixedPositionalEncoding.
+        :param x: input of shape [batch_size, listing_length, d_model]
+        :param mask: padding mask of shape [batch_size, listing_length]
+        :param indices: original item positions used in positional encoding, shape [batch_size, listing_length]
+        :return: output of shape [batch_size, listing_length, d_model]
+        """
         padded_indices = indices.masked_fill(mask, self.padding_idx)
         padded_indices[padded_indices > self.padding_idx] = self.padding_idx
         x = math.sqrt(self.pe.shape[1]) * x + self.pe[padded_indices, :]
@@ -32,14 +50,26 @@ class FixedPositionalEncoding(nn.Module):
 
 
 class LearnedPositionalEncoding(nn.Module):
-    "Implement the Learned PE function."
-
+    """
+    Class implementing learnable positional encodings.
+    """
     def __init__(self, d_model, max_len=5000):
+        """
+        :param d_model: dimensionality of the embeddings
+        :param max_len: maximum length of the sequence
+        """
         super().__init__()
 
         self.pe = nn.Embedding(max_len + 1, d_model, padding_idx=-1)
 
     def forward(self, x, mask, indices):
+        """
+        Forward pass through the LearnedPositionalEncoding.
+        :param x: input of shape [batch_size, listing_length, d_model]
+        :param mask: padding mask of shape [batch_size, listing_length]
+        :param indices: original item positions used in positional encoding, shape [batch_size, listing_length]
+        :return: output of shape [batch_size, listing_length, d_model]
+        """
         padded_indices = indices.masked_fill(mask, self.pe.padding_idx)
         padded_indices[padded_indices > self.pe.padding_idx] = self.pe.padding_idx
         x = math.sqrt(self.pe.embedding_dim) * x + self.pe(padded_indices)
@@ -47,6 +77,12 @@ class LearnedPositionalEncoding(nn.Module):
 
 
 def _make_positional_encoding(d_model: int, positional_encoding: Optional[PositionalEncoding]):
+    """
+    LTRModel construction helper function.
+    :param d_model: dimensionality of the embeddings
+    :param positional_encoding: config.PositionalEncoding object containing PE config
+    :return: positional encoding object of given variant
+    """
     if positional_encoding is None:
         return None
     elif positional_encoding.strategy == "fixed":

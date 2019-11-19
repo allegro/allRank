@@ -1,4 +1,7 @@
-# code adapted from "The Annoted Transformer" http://nlp.seas.harvard.edu/2018/04/03/attention.html
+"""
+Code in this file was adapted from "The Annotated Transformer" by Harvard NLP.
+http://nlp.seas.harvard.edu/2018/04/03/attention.html
+"""
 
 import copy
 import math
@@ -13,20 +16,38 @@ from allrank.models.positional import _make_positional_encoding
 
 
 def clones(module, N):
-    """"Produce N identical layers."""
+    """
+    Creation of N identical layers.
+    :param module: module to clone
+    :param N: number of copies
+    :return: list of module copies
+    """
     return nn.ModuleList([copy.deepcopy(module) for _ in range(N)])
 
 
 class Encoder(nn.Module):
-    """"Core encoder is a stack of N layers"""
-
+    """
+    Stack of Transformer encoder blocks with positional encoding.
+    """
     def __init__(self, layer, N, position):
+        """
+        :param layer: single building block to clone
+        :param N: number of copies
+        :param position: positional encoding module
+        """
         super(Encoder, self).__init__()
         self.layers = clones(layer, N)
         self.norm = LayerNorm(layer.size)
         self.position = position
 
     def forward(self, x, mask, indices):
+        """
+        Forward pass through each block of the Transformer.
+        :param x: input of shape [batch_size, listing_length, input_dim]
+        :param mask: padding mask of shape [batch_size, listing_length]
+        :param indices: original item positions used in positional encoding, shape [batch_size, listing_length]
+        :return: output of shape [batch_size, listing_length, output_dim]
+        """
         """"Pass the input (and mask) through each layer in turn."""
         if self.position:
             x = self.position(x, mask, indices)
@@ -37,15 +58,25 @@ class Encoder(nn.Module):
 
 
 class LayerNorm(nn.Module):
-    """"Construct a layernorm module (See citation for details)."""
-
+    """
+    Layer normalization module. Please consult the citation post for details.
+    """
     def __init__(self, features, eps=1e-6):
+        """
+        :param features: shape of normalized features
+        :param eps: epsilon used for standard deviation
+        """
         super(LayerNorm, self).__init__()
         self.a_2 = nn.Parameter(torch.ones(features))  # type: ignore
         self.b_2 = nn.Parameter(torch.zeros(features))  # type: ignore
         self.eps = eps
 
     def forward(self, x):
+        """
+        Forward pass through the layer normalization.
+        :param x: input of shape [batch_size, listing_length, input_dim]
+        :return: normalized input of shape [batch_size, listing_length, output_dim]
+        """
         mean = x.mean(-1, keepdim=True)
         std = x.std(-1, keepdim=True)
         return self.a_2 * (x - mean) / (std + self.eps) + self.b_2
@@ -53,25 +84,40 @@ class LayerNorm(nn.Module):
 
 class SublayerConnection(nn.Module):
     """
-    A residual connection followed by a layer norm.
-    Note for code simplicity the norm is first as opposed to last.
+    Residual connection followed by layer normalization.
+    Please not that for code simplicity the norm is first as opposed to last.
     """
-
     def __init__(self, size, dropout):
+        """
+        :param size: number of input/output features
+        :param dropout: dropout probability
+        """
         super(SublayerConnection, self).__init__()
         self.norm = LayerNorm(size)
         self.dropout = nn.Dropout(dropout)
 
     def forward(self, x, sublayer):
-        """"Apply residual connection to any sublayer with the same size."""
+        """
+        Forward pass through the sublayer connection module, applying the residual connection to any sublayer with the same size.
+        :param x: input of shape [batch_size, listing_length, input_dim]
+        :param sublayer: layer through which to pass the input prior to applying the sum
+        :return: output of shape [batch_size, listing_length, output_dim]
+        """
         return x + self.dropout(
             sublayer(self.norm(x)))
 
 
 class EncoderLayer(nn.Module):
-    """"Encoder is made up of self-attn and feed forward (defined below)"""
-
+    """
+    Single Transformer encoder block made of self-attention and feed-forward layers with residual connections.
+    """
     def __init__(self, size, self_attn, feed_forward, dropout):
+        """
+        :param size: input/output size of the encoder block
+        :param self_attn: self-attention layer
+        :param feed_forward: feed-forward layer
+        :param dropout: dropout probability
+        """
         super(EncoderLayer, self).__init__()
         self.self_attn = self_attn
         self.feed_forward = feed_forward
@@ -79,13 +125,26 @@ class EncoderLayer(nn.Module):
         self.size = size
 
     def forward(self, x, mask):
-        """"Follow Figure 1 (left) for connections."""
+        """
+        Forward pass through the encoder block. Follow Figure 1 (left) for connections.
+        :param x: input of shape [batch_size, listing_length, self.size]
+        :param mask: padding mask of shape [batch_size, listing_length]
+        :return: output of shape [batch_size, listing_length, self.size]
+        """
         x = self.sublayer[0](x, lambda x: self.self_attn(x, x, x, mask))
         return self.sublayer[1](x, self.feed_forward)
 
 
 def attention(query, key, value, mask=None, dropout=None):
-    """Compute 'Scaled Dot Product Attention'"""
+    """
+    Basic function for "Scaled Dot Product Attention" computation.
+    :param query: query set of shape [batch_size, listing_size, n_attention_heads, attention_dim]
+    :param key: key set of shape [batch_size, listing_size, n_attention_heads, attention_dim]
+    :param value: value set of shape [batch_size, listing_size, n_attention_heads, attention_dim]
+    :param mask: padding mask of shape [batch_size, listing_length]
+    :param dropout: dropout probability
+    :return: attention scores of shape [batch_size, listing_size, n_attention_heads, attention_dim]
+    """
     d_k = query.size(-1)
     scores = torch.matmul(query, key.transpose(-2, -1)) / math.sqrt(d_k)
 
@@ -99,8 +158,15 @@ def attention(query, key, value, mask=None, dropout=None):
 
 
 class MultiHeadedAttention(nn.Module):
+    """
+    Multi-headed attention block.
+    """
     def __init__(self, h, d_model, dropout=0.1):
-        """"Take in model size and number of heads."""
+        """
+        :param h: number of attention heads
+        :param d_model: input/output dimensionality
+        :param dropout: dropout probability
+        """
         super(MultiHeadedAttention, self).__init__()
         assert d_model % h == 0
         # We assume d_v always equals d_k
@@ -111,8 +177,14 @@ class MultiHeadedAttention(nn.Module):
         self.dropout = nn.Dropout(p=dropout)
 
     def forward(self, query, key, value, mask=None):
-        """"Implements Figure 2"""
-
+        """
+        Forward pass through the multi-head attention block. Implements Figure 2.
+        :param query: query set of shape [batch_size, listing_size, self.d_model]
+        :param key: key set of shape [batch_size, listing_size, self.d_model]
+        :param value: value set of shape [batch_size, listing_size, self.d_model]
+        :param mask: padding mask of shape [batch_size, listing_length]
+        :return: output of shape [batch_size, listing_size, self.d_model]
+        """
         if mask is not None:
             # same mask applied to all h heads
             mask = mask.unsqueeze(1)
@@ -133,21 +205,41 @@ class MultiHeadedAttention(nn.Module):
 
 
 class PositionwiseFeedForward(nn.Module):
-    """Implements FFN equation."""
-
+    """
+    Feed-forward block.
+    """
     def __init__(self, d_model, d_ff, dropout=0.1):
+        """
+        :param d_model: input/output dimensionality
+        :param d_ff: hidden dimensionality
+        :param dropout: dropout probability
+        """
         super(PositionwiseFeedForward, self).__init__()
         self.w_1 = nn.Linear(d_model, d_ff)
         self.w_2 = nn.Linear(d_ff, d_model)
         self.dropout = nn.Dropout(dropout)
 
     def forward(self, x):
+        """
+        Forward pass through the feed-forward block.
+        :param x: input of shape [batch_size, listing_size, self.d_model]
+        :return: output of shape [batch_size, listing_size, self.d_model]
+        """
         return self.w_2(self.dropout(F.relu(self.w_1(x))))
 
 
 def make_transformer(N=6, d_ff=2048, h=8, dropout=0.1, n_features=136,
                      positional_encoding: Optional[PositionalEncoding] = None):
-    """"Helper: Construct a model from hyperparameters."""
+    """
+    Transformer-based Encoder creation helper function.
+    :param N: number of Transformer blocks
+    :param d_ff: hidden dimensionality of the feed-forward layer in the Transformer block
+    :param h: number of attention heads
+    :param dropout: dropout probability
+    :param n_features: number of input/output features of the feed-forward layer
+    :param positional_encoding: config.PositionalEncoding object containing PE config
+    :return: Transformer-based Encoder with given hyperparameters
+    """
     c = copy.deepcopy
     attn = MultiHeadedAttention(h, n_features, dropout)
 
