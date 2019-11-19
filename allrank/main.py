@@ -61,7 +61,7 @@ def run():
     # train_ds, val_ds
     train_ds, val_ds = load_libsvm_dataset(
         input_path=input_path,
-        listing_length=config.data.listing_length,
+        slate_length=config.data.listing_length,
         validation_ds_role=config.data.validation_ds_role,
     )
 

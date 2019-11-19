@@ -15,7 +15,8 @@ from allrank.config import PositionalEncoding
 class FixedPositionalEncoding(nn.Module):
     """
     Class implementing fixed positional encodings.
-    Fixed positional encodings up to max_len position are computed only once - during object construction.
+    
+    Fixed positional encodings up to max_len position are computed once during object construction.
     """
     def __init__(self, d_model: int, max_len=5000):
         """
@@ -38,10 +39,10 @@ class FixedPositionalEncoding(nn.Module):
     def forward(self, x, mask, indices):
         """
         Forward pass through the FixedPositionalEncoding.
-        :param x: input of shape [batch_size, listing_length, d_model]
-        :param mask: padding mask of shape [batch_size, listing_length]
-        :param indices: original item positions used in positional encoding, shape [batch_size, listing_length]
-        :return: output of shape [batch_size, listing_length, d_model]
+        :param x: input of shape [batch_size, slate_length, d_model]
+        :param mask: padding mask of shape [batch_size, slate_length]
+        :param indices: original item ranks used in positional encoding, shape [batch_size, slate_length]
+        :return: output of shape [batch_size, slate_length, d_model]
         """
         padded_indices = indices.masked_fill(mask, self.padding_idx)
         padded_indices[padded_indices > self.padding_idx] = self.padding_idx
@@ -65,10 +66,10 @@ class LearnedPositionalEncoding(nn.Module):
     def forward(self, x, mask, indices):
         """
         Forward pass through the LearnedPositionalEncoding.
-        :param x: input of shape [batch_size, listing_length, d_model]
-        :param mask: padding mask of shape [batch_size, listing_length]
-        :param indices: original item positions used in positional encoding, shape [batch_size, listing_length]
-        :return: output of shape [batch_size, listing_length, d_model]
+        :param x: input of shape [batch_size, slate_length, d_model]
+        :param mask: padding mask of shape [batch_size, slate_length]
+        :param indices: original item ranks used in positional encoding, shape [batch_size, slate_length]
+        :return: output of shape [batch_size, slate_length, d_model]
         """
         padded_indices = indices.masked_fill(mask, self.pe.padding_idx)
         padded_indices[padded_indices > self.pe.padding_idx] = self.pe.padding_idx
@@ -78,7 +79,7 @@ class LearnedPositionalEncoding(nn.Module):
 
 def _make_positional_encoding(d_model: int, positional_encoding: Optional[PositionalEncoding]):
     """
-    LTRModel construction helper function.
+    Helper function for instantiating positional encodings classes.
     :param d_model: dimensionality of the embeddings
     :param positional_encoding: config.PositionalEncoding object containing PE config
     :return: positional encoding object of given variant

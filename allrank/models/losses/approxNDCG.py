@@ -8,12 +8,12 @@ def approxNDCGLoss(y_pred, y_true, eps=DEFAULT_EPS, padded_value_indicator=PADDE
     """
     Loss based on approximate NDCG introduced in "A General Approximation Framework for Direct Optimization of
     Information Retrieval Measures". Please note that this method does not implement any kind of truncation.
-    :param y_pred: predictions from the model, shape [batch_size, listing_length]
-    :param y_true: ground truth labels, shape [batch_size, listing_length]
-    :param eps: epsilon value
+    :param y_pred: predictions from the model, shape [batch_size, slate_length]
+    :param y_true: ground truth labels, shape [batch_size, slate_length]
+    :param eps: epsilon value, used for numerical stability
     :param padded_value_indicator: an indicator of the y_true index containing a padded item, e.g. -1
     :param alpha: score difference weight used in the sigmoid function
-    :return: loss value
+    :return: loss value, a torch.Tensor
     """
     device = y_pred.device
     y_pred = y_pred.clone()
@@ -37,7 +37,7 @@ def approxNDCGLoss(y_pred, y_true, eps=DEFAULT_EPS, padded_value_indicator=PADDE
     true_sorted_by_preds.clamp_(min=0.)
     y_true_sorted.clamp_(min=0.)
 
-    # Here we find the gains, discounts and ideal DCGs per listing.
+    # Here we find the gains, discounts and ideal DCGs per slate.
     pos_idxs = torch.arange(1, y_pred.shape[1] + 1).to(device)
     D = torch.log2(1. + pos_idxs.float())[None, :]
     maxDCGs = torch.sum((torch.pow(2, y_true_sorted) - 1) / D, dim=-1).clamp(min=eps)

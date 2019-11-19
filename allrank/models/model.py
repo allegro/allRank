@@ -11,7 +11,7 @@ def first_arg_id(x, *y):
 
 class FCModel(nn.Module):
     """
-    This class represents a fully connected neural model with given layer sizes and activation function.
+    This class represents a fully connected neural network model with given layer sizes and activation function.
     """
     def __init__(self, sizes, input_norm, activation, dropout, n_features):
         """
@@ -35,8 +35,8 @@ class FCModel(nn.Module):
     def forward(self, x):
         """
         Forward pass through the FCModel.
-        :param x: input of shape [batch_size, listing_length, self.layers[0].in_features]
-        :return: output of shape [batch_size, listing_length, self.output_size]
+        :param x: input of shape [batch_size, slate_length, self.layers[0].in_features]
+        :return: output of shape [batch_size, slate_length, self.output_size]
         """
         x = self.input_norm(x)
         for l in self.layers:
@@ -62,37 +62,39 @@ class LTRModel(nn.Module):
     def prepare_for_output(self, x, mask, indices):
         """
         Forward pass through the input layer and encoder.
-        :param x: input of shape [batch_size, listing_length, input_dim]
-        :param mask: padding mask of shape [batch_size, listing_length]
-        :param indices: original item positions used in positional encoding, shape [batch_size, listing_length]
-        :return: encoder output of shape [batch_size, listing_length, encoder_output_dim]
+        :param x: input of shape [batch_size, slate_length, input_dim]
+        :param mask: padding mask of shape [batch_size, slate_length]
+        :param indices: original item ranks used in positional encoding, shape [batch_size, slate_length]
+        :return: encoder output of shape [batch_size, slate_length, encoder_output_dim]
         """
         return self.encoder(self.input_layer(x), mask, indices)
 
     def forward(self, x, mask, indices):
         """
         Forward pass through the whole LTRModel.
-        :param x: input of shape [batch_size, listing_length, input_dim]
-        :param mask: padding mask of shape [batch_size, listing_length]
-        :param indices: original item positions used in positional encoding, shape [batch_size, listing_length]
-        :return: model output of shape [batch_size, listing_length, output_dim]
+        :param x: input of shape [batch_size, slate_length, input_dim]
+        :param mask: padding mask of shape [batch_size, slate_length]
+        :param indices: original item ranks used in positional encoding, shape [batch_size, slate_length]
+        :return: model output of shape [batch_size, slate_length, output_dim]
         """
         return self.output_layer(self.prepare_for_output(x, mask, indices))
 
     def score(self, x, mask, indices):
         """
         Forward pass through the whole LTRModel and item scoring.
-        :param x: input of shape [batch_size, listing_length, input_dim]
-        :param mask: padding mask of shape [batch_size, listing_length]
-        :param indices: original item positions used in positional encoding, shape [batch_size, listing_length]
-        :return: scores of shape [batch_size, listing_length]
+
+        Used when evaluating listwise metrics in the training loop.
+        :param x: input of shape [batch_size, slate_length, input_dim]
+        :param mask: padding mask of shape [batch_size, slate_length]
+        :param indices: original item ranks used in positional encoding, shape [batch_size, slate_length]
+        :return: scores of shape [batch_size, slate_length]
         """
         return self.output_layer.score(self.prepare_for_output(x, mask, indices))
 
 
 class OutputLayer(nn.Module):
     """
-    This class represents an output block reducing the output dimensionality to one.
+    This class represents an output block reducing the output dimensionality to d_output.
     """
     def __init__(self, d_model, d_output, output_activation=None):
         """
@@ -109,16 +111,16 @@ class OutputLayer(nn.Module):
     def forward(self, x):
         """
         Forward pass through the OutputLayer.
-        :param x: input of shape [batch_size, listing_length, self.d_model]
-        :return: output of shape [batch_size, listing_length, self.d_output]
+        :param x: input of shape [batch_size, slate_length, self.d_model]
+        :return: output of shape [batch_size, slate_length, self.d_output]
         """
         return self.activation(self.w_1(x).squeeze(dim=2))
 
     def score(self, x):
         """
-        Forward pass through the OutputLayer and item scoring by summing the individual outputs.
-        :param x: input of shape [batch_size, listing_length, self.d_model]
-        :return: output of shape [batch_size, listing_length]
+        Forward pass through the OutputLayer and item scoring by summing the individual outputs if d_output > 1.
+        :param x: input of shape [batch_size, slate_length, self.d_model]
+        :return: output of shape [batch_size, slate_length]
         """
         if self.d_output > 1:
             return self.forward(x).sum(-1)
@@ -128,12 +130,12 @@ class OutputLayer(nn.Module):
 
 def make_model(fc_model, transformer, post_model, n_features):
     """
-    LTRModel construction helper function.
+    Helper function for instantiating LTRModel.
     :param fc_model: FCModel used as input block
-    :param transformer: transformerEncoder used as encoder block
+    :param transformer: transformer Encoder used as encoder block
     :param post_model: parameters dict for OutputModel output block (excluding d_model)
     :param n_features: number of input features
-    :return: LTRModel made of given parts
+    :return: LTR model instance
     """
     if fc_model:
         fc_model = FCModel(**fc_model, n_features=n_features)  # type: ignore

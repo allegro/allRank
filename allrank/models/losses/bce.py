@@ -8,11 +8,10 @@ from allrank.models.model_utils import get_torch_device
 def bce(y_pred, y_true, padded_value_indicator=PADDED_Y_VALUE):
     """
     Binary Cross-Entropy loss.
-    :param y_pred: predictions from the model, shape [batch_size, listing_length]
-    :param y_true: ground truth labels, shape [batch_size, listing_length]
+    :param y_pred: predictions from the model, shape [batch_size, slate_length]
+    :param y_true: ground truth labels, shape [batch_size, slate_length]
     :param padded_value_indicator: an indicator of the y_true index containing a padded item, e.g. -1
-    :param alpha: score difference weight used in the sigmoid function
-    :return: loss value
+    :return: loss value, a torch.Tensor
     """
     device = get_torch_device()
 

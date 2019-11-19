@@ -7,10 +7,10 @@ from allrank.models.model_utils import get_torch_device
 
 def with_ordinals(y, n):
     """
-    Helper function for ordinal loss, transforming input to proper ordinal values.
-    :param y: labels, shape [batch_size, listing_length]
+    Helper function for ordinal loss, transforming input labels to ordinal values.
+    :param y: labels, shape [batch_size, slate_length]
     :param n: number of ordinals
-    :return: ordinals, shape [batch_size, listing_length, n]
+    :return: ordinals, shape [batch_size, slate_length, n]
     """
     dev = get_torch_device()
     one_to_n = torch.arange(start=1, end=n + 1, dtype=torch.float, device=dev)
@@ -24,11 +24,11 @@ def with_ordinals(y, n):
 def ordinal(y_pred, y_true, n, padded_value_indicator=PADDED_Y_VALUE):
     """
     Ordinal loss.
-    :param y_pred: predictions from the model, shape [batch_size, listing_length]
-    :param y_true: ground truth labels, shape [batch_size, listing_length]
-    :param n: number
+    :param y_pred: predictions from the model, shape [batch_size, slate_length]
+    :param y_true: ground truth labels, shape [batch_size, slate_length]
+    :param n: number of ordinal values, int
     :param padded_value_indicator: an indicator of the y_true index containing a padded item, e.g. -1
-    :return: loss value
+    :return: loss value, a torch.Tensor
     """
     device = get_torch_device()
 

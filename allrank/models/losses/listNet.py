@@ -8,11 +8,11 @@ from allrank.models.losses import DEFAULT_EPS
 def listNet(y_pred, y_true, eps=DEFAULT_EPS, padded_value_indicator=PADDED_Y_VALUE):
     """
     ListNet loss introduced in "Learning to Rank: From Pairwise Approach to Listwise Approach".
-    :param y_pred: predictions from the model, shape [batch_size, listing_length]
-    :param y_true: ground truth labels, shape [batch_size, listing_length]
-    :param eps: epsilon value
+    :param y_pred: predictions from the model, shape [batch_size, slate_length]
+    :param y_true: ground truth labels, shape [batch_size, slate_length]
+    :param eps: epsilon value, used for numerical stability
     :param padded_value_indicator: an indicator of the y_true index containing a padded item, e.g. -1
-    :return: loss value
+    :return: loss value, a torch.Tensor
     """
     y_pred = y_pred.clone()
     y_true = y_true.clone()

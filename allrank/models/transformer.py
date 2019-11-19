@@ -20,7 +20,7 @@ def clones(module, N):
     Creation of N identical layers.
     :param module: module to clone
     :param N: number of copies
-    :return: list of module copies
+    :return: nn.ModuleList of module copies
     """
     return nn.ModuleList([copy.deepcopy(module) for _ in range(N)])
 
@@ -43,12 +43,11 @@ class Encoder(nn.Module):
     def forward(self, x, mask, indices):
         """
         Forward pass through each block of the Transformer.
-        :param x: input of shape [batch_size, listing_length, input_dim]
-        :param mask: padding mask of shape [batch_size, listing_length]
-        :param indices: original item positions used in positional encoding, shape [batch_size, listing_length]
-        :return: output of shape [batch_size, listing_length, output_dim]
+        :param x: input of shape [batch_size, slate_length, input_dim]
+        :param mask: padding mask of shape [batch_size, slate_length]
+        :param indices: original item ranks used in positional encoding, shape [batch_size, slate_length]
+        :return: output of shape [batch_size, slate_length, output_dim]
         """
-        """"Pass the input (and mask) through each layer in turn."""
         if self.position:
             x = self.position(x, mask, indices)
         mask = mask.unsqueeze(-2)
@@ -59,7 +58,7 @@ class Encoder(nn.Module):
 
 class LayerNorm(nn.Module):
     """
-    Layer normalization module. Please consult the citation post for details.
+    Layer normalization module.
     """
     def __init__(self, features, eps=1e-6):
         """
@@ -74,8 +73,8 @@ class LayerNorm(nn.Module):
     def forward(self, x):
         """
         Forward pass through the layer normalization.
-        :param x: input of shape [batch_size, listing_length, input_dim]
-        :return: normalized input of shape [batch_size, listing_length, output_dim]
+        :param x: input of shape [batch_size, slate_length, input_dim]
+        :return: normalized input of shape [batch_size, slate_length, output_dim]
         """
         mean = x.mean(-1, keepdim=True)
         std = x.std(-1, keepdim=True)
@@ -99,9 +98,9 @@ class SublayerConnection(nn.Module):
     def forward(self, x, sublayer):
         """
         Forward pass through the sublayer connection module, applying the residual connection to any sublayer with the same size.
-        :param x: input of shape [batch_size, listing_length, input_dim]
+        :param x: input of shape [batch_size, slate_length, input_dim]
         :param sublayer: layer through which to pass the input prior to applying the sum
-        :return: output of shape [batch_size, listing_length, output_dim]
+        :return: output of shape [batch_size, slate_length, output_dim]
         """
         return x + self.dropout(
             sublayer(self.norm(x)))
@@ -126,10 +125,10 @@ class EncoderLayer(nn.Module):
 
     def forward(self, x, mask):
         """
-        Forward pass through the encoder block. Follow Figure 1 (left) for connections.
-        :param x: input of shape [batch_size, listing_length, self.size]
-        :param mask: padding mask of shape [batch_size, listing_length]
-        :return: output of shape [batch_size, listing_length, self.size]
+        Forward pass through the encoder block.
+        :param x: input of shape [batch_size, slate_length, self.size]
+        :param mask: padding mask of shape [batch_size, slate_length]
+        :return: output of shape [batch_size, slate_length, self.size]
         """
         x = self.sublayer[0](x, lambda x: self.self_attn(x, x, x, mask))
         return self.sublayer[1](x, self.feed_forward)
@@ -138,12 +137,12 @@ class EncoderLayer(nn.Module):
 def attention(query, key, value, mask=None, dropout=None):
     """
     Basic function for "Scaled Dot Product Attention" computation.
-    :param query: query set of shape [batch_size, listing_size, n_attention_heads, attention_dim]
-    :param key: key set of shape [batch_size, listing_size, n_attention_heads, attention_dim]
-    :param value: value set of shape [batch_size, listing_size, n_attention_heads, attention_dim]
-    :param mask: padding mask of shape [batch_size, listing_length]
+    :param query: query set of shape [batch_size, slate_size, n_attention_heads, attention_dim]
+    :param key: key set of shape [batch_size, slate_size, n_attention_heads, attention_dim]
+    :param value: value set of shape [batch_size, slate_size, n_attention_heads, attention_dim]
+    :param mask: padding mask of shape [batch_size, slate_length]
     :param dropout: dropout probability
-    :return: attention scores of shape [batch_size, listing_size, n_attention_heads, attention_dim]
+    :return: attention scores of shape [batch_size, slate_size, n_attention_heads, attention_dim]
     """
     d_k = query.size(-1)
     scores = torch.matmul(query, key.transpose(-2, -1)) / math.sqrt(d_k)
@@ -178,12 +177,12 @@ class MultiHeadedAttention(nn.Module):
 
     def forward(self, query, key, value, mask=None):
         """
-        Forward pass through the multi-head attention block. Implements Figure 2.
-        :param query: query set of shape [batch_size, listing_size, self.d_model]
-        :param key: key set of shape [batch_size, listing_size, self.d_model]
-        :param value: value set of shape [batch_size, listing_size, self.d_model]
-        :param mask: padding mask of shape [batch_size, listing_length]
-        :return: output of shape [batch_size, listing_size, self.d_model]
+        Forward pass through the multi-head attention block.
+        :param query: query set of shape [batch_size, slate_size, self.d_model]
+        :param key: key set of shape [batch_size, slate_size, self.d_model]
+        :param value: value set of shape [batch_size, slate_size, self.d_model]
+        :param mask: padding mask of shape [batch_size, slate_length]
+        :return: output of shape [batch_size, slate_size, self.d_model]
         """
         if mask is not None:
             # same mask applied to all h heads
@@ -222,8 +221,8 @@ class PositionwiseFeedForward(nn.Module):
     def forward(self, x):
         """
         Forward pass through the feed-forward block.
-        :param x: input of shape [batch_size, listing_size, self.d_model]
-        :return: output of shape [batch_size, listing_size, self.d_model]
+        :param x: input of shape [batch_size, slate_size, self.d_model]
+        :return: output of shape [batch_size, slate_size, self.d_model]
         """
         return self.w_2(self.dropout(F.relu(self.w_1(x))))
 
@@ -231,7 +230,7 @@ class PositionwiseFeedForward(nn.Module):
 def make_transformer(N=6, d_ff=2048, h=8, dropout=0.1, n_features=136,
                      positional_encoding: Optional[PositionalEncoding] = None):
     """
-    Transformer-based Encoder creation helper function.
+    Helper function for instantiating Transformer-based Encoder.
     :param N: number of Transformer blocks
     :param d_ff: hidden dimensionality of the feed-forward layer in the Transformer block
     :param h: number of attention heads

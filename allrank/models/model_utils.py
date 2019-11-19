@@ -18,8 +18,8 @@ def get_torch_device():
 
 def get_num_params(model: nn.Module) -> int:
     """
-    Calculation of nn.Module parameters number.
-    :param model: nn.Module of interest
+    Calculation of the number of nn.Module parameters.
+    :param model: nn.Module
     :return: number of parameters
     """
     model_parameters = filter(lambda p: p.requires_grad, model.parameters())
@@ -42,9 +42,9 @@ class CustomDataParallel(nn.DataParallel):
     def score(self, x, mask, indices):
         """
         Wrapper function for a forward pass through the whole LTRModel and item scoring.
-        :param x: input of shape [batch_size, listing_length, input_dim]
-        :param mask: padding mask of shape [batch_size, listing_length]
-        :param indices: original item positions used in positional encoding, shape [batch_size, listing_length]
-        :return: scores of shape [batch_size, listing_length]
+        :param x: input of shape [batch_size, slate_length, input_dim]
+        :param mask: padding mask of shape [batch_size, slate_length]
+        :param indices: original item ranks used in positional encoding, shape [batch_size, slate_length]
+        :return: scores of shape [batch_size, slate_length]
         """
         return self.module.score(x, mask, indices)

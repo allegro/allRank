@@ -7,19 +7,19 @@ from allrank.models.losses import DEFAULT_EPS
 def lambdaLoss(y_pred, y_true, eps=DEFAULT_EPS, padded_value_indicator=PADDED_Y_VALUE, weighing_scheme=None, k=None, sigma=1., mu=10.,
                reduction="sum", reduction_log="binary"):
     """
-    LambdaLoss framework for LTR loss implementations, introduced in "The LambdaLoss Framework for Ranking Metric Optimization".
+    LambdaLoss framework for LTR losses implementations, introduced in "The LambdaLoss Framework for Ranking Metric Optimization".
     Contains implementations of different weighing schemes corresponding to e.g. LambdaRank or RankNet.
-    :param y_pred: predictions from the model, shape [batch_size, listing_length]
-    :param y_true: ground truth labels, shape [batch_size, listing_length]
-    :param eps: epsilon value
+    :param y_pred: predictions from the model, shape [batch_size, slate_length]
+    :param y_true: ground truth labels, shape [batch_size, slate_length]
+    :param eps: epsilon value, used for numerical stability
     :param padded_value_indicator: an indicator of the y_true index containing a padded item, e.g. -1
     :param weighing_scheme: a string corresponding to a name of one of the weighing schemes
-    :param k: ranking truncation position
+    :param k: rank at which the loss is truncated
     :param sigma: score difference weight used in the sigmoid function
     :param mu: optional weight used in NDCGLoss2++ weighing scheme
-    :param reduction: losses reduction method, could be either sum or mean
+    :param reduction: losses reduction method, could be either a sum or a mean
     :param reduction_log: logarithm variant used prior to masking and loss reduction, either binary or natural
-    :return: loss value
+    :return: loss value, a torch.Tensor
     """
     device = y_pred.device
     y_pred = y_pred.clone()
@@ -48,7 +48,7 @@ def lambdaLoss(y_pred, y_true, eps=DEFAULT_EPS, padded_value_indicator=PADDED_Y_
     true_sorted_by_preds.clamp_(min=0.)
     y_true_sorted.clamp_(min=0.)
 
-    # Here we find the gains, discounts and ideal DCGs per listing.
+    # Here we find the gains, discounts and ideal DCGs per slate.
     pos_idxs = torch.arange(1, y_pred.shape[1] + 1).to(device)
     D = torch.log2(1. + pos_idxs.float())[None, :]
     maxDCGs = torch.sum(((torch.pow(2, y_true_sorted) - 1) / D)[:, :k], dim=-1).clamp(min=eps)
