@@ -10,7 +10,7 @@
         32
       ],
       "input_norm": true,
-      "activation": null,
+      "activation": "ReLU",
       "dropout": 0.1
     },
     "transformer":
@@ -18,7 +18,10 @@
       "N": 2,
       "d_ff": 128,
       "h": 2,
-      "positional_encoding": null,
+      "positional_encoding": {
+        "strategy": "fixed",
+        "max_indices": 1500
+      },
       "dropout": 0.2
     },
     "post_model":
@@ -29,12 +32,11 @@
   },
   "data":
   {
-    "path": "dataset_path",
+    "path": "dummy_data",
     "validation_ds_role": "vali",
-    "fold": "1",
     "num_workers": 1,
     "batch_size": 2,
-    "listing_length": 20
+    "slate_length": 20
   },
   "optimizer":
   {
@@ -49,15 +51,15 @@
     "name": "StepLR",
     "args":
     {
-      "step_size": 1,
+      "step_size": 5,
       "gamma": 0.9
     }
   },
   "training":
   {
     "epochs": 10,
-    "early_stopping_patience": 2,
-    "gradient_clipping_norm": null
+    "early_stopping_patience": 5,
+    "gradient_clipping_norm": 5.0
   },
   "metrics":
   [
@@ -66,8 +68,13 @@
   ],
 "loss":
   {
-    "name": "listMLE",
-    "args": {}
+    "name": "lambdaLoss",
+    "args": {
+      "weighing_scheme": "ndcgLoss2PP_scheme",
+      "k": 5000,
+      "mu": 10,
+      "sigma": 1.0
+    }
   },
 "val_metric": "ndcg@5",
 "detect_anomaly": false,

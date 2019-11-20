@@ -1,0 +1,63 @@
+{
+  "model":
+  {
+    "fc_model":
+    {
+      "sizes": <list of comma separated ints, dimmensions of hidden layers of a fully connected network applied to the input>,
+      "input_norm": <boolean, whether to to apply LayerNorm to input>
+      "activation": <Optional[str], name of the activation funtion to be used between hidden layers, as in torch.nn.modules.activation>
+      "dropout": <float, dropout probability>
+    },
+    "transformer":
+    {
+      "N": <int, number of transformer blocks>
+      "d_ff": <int, hidden dimmension>
+      "h": <int, number of transformer heads>
+      "positional_encoding": <Optional[dict] with two keys, strategy (either "fixed" or "learned") and max_indices, int>
+      "dropout": <float, dropout probability
+    },
+    "post_model":
+    {
+      "output_activation": <Optional[str], name of the activation funtion to be used on the output, as in torch.nn.modules.activation>
+      "d_output": <int, number of output neurons>
+    }
+  },
+  "data":
+  {
+    "path": <str, path do dataset dir>,
+    "validation_ds_role": <str, name of the validation dataset to be used, excluding .txt extension>,
+    "num_workers": <int, num workers in the data loaders>
+    "batch_size": <int, batch size>
+    "slate_length": <int, slate length used in training, slates will be subsampled or padded to match that length>
+  },
+  "optimizer":
+  {
+    "name": <str, name of the optimizer as in torch.optim>
+    "args": <dict, arguments of the optimizer>
+  },
+  "lr_scheduler":
+  {
+    "name": <str, name of the LR scheduler as in torch.optim.lr_scheduler>
+    "args": <dict, arguments of the LR scheduler>
+  },
+  "training":
+  {
+    "epochs": <int, num epochs>
+    "early_stopping_patience": <int, number of epochs for early stopping>
+    "gradient_clipping_norm": <Optional[float]
+  },
+  "metrics": <list of metrics for evaluation of the form name@k where name is the name of the metric
+              as defined in models/metrics.py and k is the rank used for evaluation>,
+"loss":
+  {
+    "name": <str, name of the loss to be used, as defined in models/losses
+    "args": <dict, arguments of the loss function, empty if no arguments are needed>
+  },
+"val_metric": <str, name of the metric to be monitored in early stopping>,
+"detect_anomaly": <boolean, whether to use pytorch's detect anomaly feature>
+"expected_metrics" :
+  {
+  "val": <dict, keys are metric names are values are their expected values,
+          useful for seeing if changes to your code degrade model performance of previously trained model>
+  }
+}

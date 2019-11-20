@@ -17,7 +17,7 @@ reqs = [
 setup(
     name="allRank",
     license="Apache 2",
-    url="",
+    url="https://github.com/allegro/allRank",
     install_requires=reqs,
     author_email="allrank@allegro.pl",
     description="allRank is a framework for training learning-to-rank neural models",

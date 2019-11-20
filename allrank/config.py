@@ -44,10 +44,9 @@ class PositionalEncoding:
 @attrs
 class DataConfig:
     path = attrib(type=str)
-    fold = attrib(type=Union[int, str])
     num_workers = attrib(type=int)
     batch_size = attrib(type=int)
-    listing_length = attrib(type=int)
+    slate_length = attrib(type=int)
     validation_ds_role = attrib(type=str)
 
 
