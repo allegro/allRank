@@ -3,13 +3,18 @@ import torch
 from allrank.data.dataset_loading import PADDED_Y_VALUE
 from allrank.models.losses import DEFAULT_EPS
 
-"""Here is the approximate NDCG-based loss from the paper A General Approximation Framework for Direct Optimization of
-Information Retrieval Measures. This method does not implement any kind of truncation, hence the estimated measure is the
-NDCG at the very last position.
-"""
 
-
-def approxNDCGLoss(y_pred, y_true, padded_value_indicator=PADDED_Y_VALUE, alpha=1.):
+def approxNDCGLoss(y_pred, y_true, eps=DEFAULT_EPS, padded_value_indicator=PADDED_Y_VALUE, alpha=1.):
+    """
+    Loss based on approximate NDCG introduced in "A General Approximation Framework for Direct Optimization of
+    Information Retrieval Measures". Please note that this method does not implement any kind of truncation.
+    :param y_pred: predictions from the model, shape [batch_size, slate_length]
+    :param y_true: ground truth labels, shape [batch_size, slate_length]
+    :param eps: epsilon value, used for numerical stability
+    :param padded_value_indicator: an indicator of the y_true index containing a padded item, e.g. -1
+    :param alpha: score difference weight used in the sigmoid function
+    :return: loss value, a torch.Tensor
+    """
     device = y_pred.device
     y_pred = y_pred.clone()
     y_true = y_true.clone()
@@ -32,16 +37,16 @@ def approxNDCGLoss(y_pred, y_true, padded_value_indicator=PADDED_Y_VALUE, alpha=
     true_sorted_by_preds.clamp_(min=0.)
     y_true_sorted.clamp_(min=0.)
 
-    # Here we find the gains, discounts and ideal DCGs per listing.
+    # Here we find the gains, discounts and ideal DCGs per slate.
     pos_idxs = torch.arange(1, y_pred.shape[1] + 1).to(device)
     D = torch.log2(1. + pos_idxs.float())[None, :]
-    maxDCGs = torch.sum((torch.pow(2, y_true_sorted) - 1) / D, dim=-1).clamp(min=DEFAULT_EPS)
+    maxDCGs = torch.sum((torch.pow(2, y_true_sorted) - 1) / D, dim=-1).clamp(min=eps)
     G = (torch.pow(2, true_sorted_by_preds) - 1) / maxDCGs[:, None]
 
     # Here we approximate the ranking positions according to Eqs 19-20 and later approximate NDCG (Eq 21)
     scores_diffs = (y_pred_sorted[:, :, None] - y_pred_sorted[:, None, :])
     scores_diffs[~padded_pairs_mask] = 0.
-    approx_pos = 1. + torch.sum(padded_pairs_mask.float() * (torch.sigmoid(-alpha * scores_diffs).clamp(min=DEFAULT_EPS)), dim=-1)
+    approx_pos = 1. + torch.sum(padded_pairs_mask.float() * (torch.sigmoid(-alpha * scores_diffs).clamp(min=eps)), dim=-1)
     approx_D = torch.log2(1. + approx_pos)
     approx_NDCG = torch.sum((G / approx_D), dim=-1)
 

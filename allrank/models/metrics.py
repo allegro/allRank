@@ -6,9 +6,16 @@ from allrank.models.model_utils import get_torch_device
 
 
 def ndcg(y_pred, y_true, ats=None, gain_function=lambda x: torch.pow(2, x) - 1):
-    # y_true and y_pred have dimensions [listing, document_score]
-    # returns a tensor with ndcg values at positions specified by 'ats' with dimensions [listing, dcg_at]
-
+    """
+    Normalized Discounted Cumulative Gain at k.
+    
+    Compute NDCG at ranks given by ats or at the maximum rank if ats is None.
+    :param y_pred: predictions from the model, shape [batch_size, slate_length]
+    :param y_true: ground truth labels, shape [batch_size, slate_length]
+    :param ats: optional list of ranks for NDCG evaluation, if None, maximum rank is used
+    :param gain_function: callable, gain function for the ground truth labels, e.g. torch.pow(2, x) - 1
+    :return: NDCG values for each slate and rank passed, shape [batch_size, len(ats)]
+    """
     idcg = dcg(y_true, y_true, ats, gain_function)
     ndcg_ = dcg(y_pred, y_true, ats, gain_function) / idcg
     idcg_mask = idcg == 0
@@ -30,8 +37,16 @@ def __apply_mask_and_get_true_sorted_by_preds(y_pred, y_true):
 
 
 def dcg(y_pred, y_true, ats=None, gain_function=lambda x: torch.pow(2, x) - 1):
-    # y_true and y_pred have dimensions [listing, document_score]
-    # returns a tensor with ndcg values at positions specified by 'ats' with dimensions [listing, dcg_at]
+    """
+    Discounted Cumulative Gain at k.
+
+    Compute DCG at ranks given by ats or at the maximum rank if ats is None.
+    :param y_pred: predictions from the model, shape [batch_size, slate_length]
+    :param y_true: ground truth labels, shape [batch_size, slate_length]
+    :param ats: optional list of ranks for DCG evaluation, if None, maximum rank is used
+    :param gain_function: callable, gain function for the ground truth labels, e.g. torch.pow(2, x) - 1
+    :return: DCG values for each slate and evaluation position, shape [batch_size, len(ats)]
+    """
     y_true = y_true.clone()
     y_pred = y_pred.clone()
 
@@ -62,8 +77,15 @@ def dcg(y_pred, y_true, ats=None, gain_function=lambda x: torch.pow(2, x) - 1):
 
 
 def mrr(y_pred, y_true, ats=None):
-    # y_true and y_pred have dimensions [listing, document_score]
-    # returns a tensor with mrr values at positions specified by 'ats' with dimensions [listing, mrr_at]
+    """
+    Mean Reciprocal Rank at k.
+
+    Compute MRR at ranks given by ats or at the maximum rank if ats is None.
+    :param y_pred: predictions from the model, shape [batch_size, slate_length]
+    :param y_true: ground truth labels, shape [batch_size, slate_length]
+    :param ats: optional list of ranks for MRR evaluation, if None, maximum rank is used
+    :return: MRR values for each slate and evaluation position, shape [batch_size, len(ats)]
+    """
     y_true = y_true.clone()
     y_pred = y_pred.clone()
 
