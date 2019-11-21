@@ -3,7 +3,7 @@
   {
     "fc_model":
     {
-      "sizes": <list of comma separated ints, dimmensions of hidden layers of a fully connected network applied to the input>,
+      "sizes": <array of ints, dimmensions of hidden layers of a fully connected network applied to the input>,
       "input_norm": <boolean, whether to to apply LayerNorm to input>
       "activation": <Optional[str], name of the activation funtion to be used between hidden layers, as in torch.nn.modules.activation>
       "dropout": <float, dropout probability>
@@ -24,7 +24,7 @@
   },
   "data":
   {
-    "path": <str, path do dataset dir>,
+    "path": <str, path to dataset dir>,
     "validation_ds_role": <str, name of the validation dataset to be used, excluding .txt extension>,
     "num_workers": <int, num workers in the data loaders>
     "batch_size": <int, batch size>
