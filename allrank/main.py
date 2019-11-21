@@ -56,12 +56,10 @@ def run():
     output_config_path = os.path.join(paths.output_dir, "used_config.json")
     execute_command("cp {} {}".format(paths.config_path, output_config_path))
 
-    input_path = os.path.join(config.data.path, "Fold{}".format(config.data.fold))
-
     # train_ds, val_ds
     train_ds, val_ds = load_libsvm_dataset(
-        input_path=input_path,
-        slate_length=config.data.listing_length,
+        input_path=config.data.path,
+        slate_length=config.data.slate_length,
         validation_ds_role=config.data.validation_ds_role,
     )
 

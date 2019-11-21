@@ -18,4 +18,4 @@ tests: install-reqs unittests
 
 .PHONY: unittests
 unittests:
-	python -m pytest --junitxml=test_report.xml
+	python -m pytest
