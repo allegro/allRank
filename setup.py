@@ -12,10 +12,12 @@ reqs = [
     "scipy>=1.2.0",
     "attrs==18.2.0",
     "flatten_dict==0.1.0",
+    "pillow==6.2.1"
 ]
 
 setup(
     name="allRank",
+    version="1.1.0",
     license="Apache 2",
     url="https://github.com/allegro/allRank",
     install_requires=reqs,

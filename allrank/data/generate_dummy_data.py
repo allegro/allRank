@@ -12,15 +12,15 @@ def generate_dummy_data(
     """
     Generate dummy dataset to be dumped in libsvm format.
     """
-    X = np.random.rand(num_queries * results_len, num_features)
-    y = np.random.randint(0, num_labels-1, num_queries * results_len)
+    X = np.random.randn(num_queries * results_len, num_features)
+    y = np.maximum(0, (((X+1)/2).mean(axis=-1) * num_labels).astype(np.int32))
     qid = np.repeat(np.arange(0, num_queries), results_len)
     return X, y, qid
 
 
 def parse_args() -> Dict[str, Any]:
     parser = ArgumentParser("Dummy data")
-    parser.add_argument("--num_queries", help="Number of queries.", default=6)
+    parser.add_argument("--num_queries", help="Number of queries.", default=100)
     parser.add_argument("--results_len", help="Length of results list for a single query.", default=20)
     parser.add_argument("--num_labels", help="Number of relevance levels.", default=5)
     parser.add_argument("--num_features", help="Number of features of a single item", default=20)
@@ -28,7 +28,7 @@ def parse_args() -> Dict[str, Any]:
 
 
 if __name__ == '__main__':
-
+    np.random.seed(42)
     args = parse_args()
     X_train, y_train, qid_train = generate_dummy_data(**args)
     X_val, y_val, qid_val = generate_dummy_data(**args)

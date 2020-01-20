@@ -23,11 +23,10 @@ from allrank.utils.python_utils import dummy_context_mgr
 
 def parse_args() -> Namespace:
     parser = ArgumentParser("allRank")
-    parser.add_argument("--output", help="Base output path for all experiments", required=True)
+    parser.add_argument("--job-dir", help="Base output path for all experiments", required=True)
     parser.add_argument("--run-id", help="Name of this run to be recorded (must be unique within output dir)",
                         required=True)
-    parser.add_argument("--config-file-name", required=True, type=str,
-                        help="Name of json file with config")
+    parser.add_argument("--config-file-name", required=True, type=str, help="Name of json file with config")
 
     return parser.parse_args()
 
@@ -40,7 +39,7 @@ def run():
 
     args = parse_args()
 
-    paths = PathsContainer.from_args(args.output, args.run_id, args.config_file_name)
+    paths = PathsContainer.from_args(args.job_dir, args.run_id, args.config_file_name)
 
     os.makedirs(paths.base_output_path, exist_ok=True)
 
