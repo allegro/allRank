@@ -69,4 +69,7 @@ node_modules/
 
 # Project-specific files
 model_output
+allrank/config.json
+task-data
+dummy_data
 
