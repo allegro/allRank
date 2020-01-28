@@ -3,7 +3,7 @@
 from setuptools import setup, find_packages
 
 reqs = [
-    "tensorflow==1.15.0",
+    "tensorflow==1.15.2",
     "torch==1.4.0",
     "torchvision==0.5.0",
     "scikit-learn==0.22.1",
