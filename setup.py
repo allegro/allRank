@@ -1,6 +1,10 @@
 # coding=utf-8
 
+import pathlib
 from setuptools import setup, find_packages
+
+HERE = pathlib.Path(__file__).parent
+README = (HERE / "README.md").read_text()
 
 reqs = [
     "tensorflow==1.15.0",
@@ -17,13 +21,14 @@ reqs = [
 setup(
     name="allRank",
     version="1.2.0",
+    description="allRank is a framework for training learning-to-rank neural models",
+    long_description=README,
+    long_description_content_type="text/markdown",
     license="Apache 2",
     url="https://github.com/allegro/allRank",
     install_requires=reqs,
     author_email="allrank@allegro.pl",
-    description="allRank is a framework for training learning-to-rank neural models",
     packages=find_packages(exclude=["tests"]),
-    package_data={"allrank": ["config.json"]},
     entry_points={"console_scripts": ['allRank = allrank.main:run']},
     zip_safe=False,
 )
