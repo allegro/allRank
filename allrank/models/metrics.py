@@ -5,7 +5,7 @@ from allrank.data.dataset_loading import PADDED_Y_VALUE
 from allrank.models.model_utils import get_torch_device
 
 
-def ndcg(y_pred, y_true, ats=None, gain_function=lambda x: torch.pow(2, x) - 1):
+def ndcg(y_pred, y_true, ats=None, gain_function=lambda x: torch.pow(2, x) - 1, padding_indicator=PADDED_Y_VALUE):
     """
     Normalized Discounted Cumulative Gain at k.
 
@@ -14,10 +14,11 @@ def ndcg(y_pred, y_true, ats=None, gain_function=lambda x: torch.pow(2, x) - 1):
     :param y_true: ground truth labels, shape [batch_size, slate_length]
     :param ats: optional list of ranks for NDCG evaluation, if None, maximum rank is used
     :param gain_function: callable, gain function for the ground truth labels, e.g. torch.pow(2, x) - 1
+    :param padding_indicator: an indicator of the y_true index containing a padded item, e.g. -1
     :return: NDCG values for each slate and rank passed, shape [batch_size, len(ats)]
     """
-    idcg = dcg(y_true, y_true, ats, gain_function)
-    ndcg_ = dcg(y_pred, y_true, ats, gain_function) / idcg
+    idcg = dcg(y_true, y_true, ats, gain_function, padding_indicator)
+    ndcg_ = dcg(y_pred, y_true, ats, gain_function, padding_indicator) / idcg
     idcg_mask = idcg == 0
     ndcg_[idcg_mask] = 0.  # if idcg == 0 , set ndcg to 0
 
@@ -36,7 +37,7 @@ def __apply_mask_and_get_true_sorted_by_preds(y_pred, y_true, padding_indicator=
     return torch.gather(y_true, dim=1, index=indices)
 
 
-def dcg(y_pred, y_true, ats=None, gain_function=lambda x: torch.pow(2, x) - 1):
+def dcg(y_pred, y_true, ats=None, gain_function=lambda x: torch.pow(2, x) - 1, padding_indicator=PADDED_Y_VALUE):
     """
     Discounted Cumulative Gain at k.
 
@@ -45,6 +46,7 @@ def dcg(y_pred, y_true, ats=None, gain_function=lambda x: torch.pow(2, x) - 1):
     :param y_true: ground truth labels, shape [batch_size, slate_length]
     :param ats: optional list of ranks for DCG evaluation, if None, maximum rank is used
     :param gain_function: callable, gain function for the ground truth labels, e.g. torch.pow(2, x) - 1
+    :param padding_indicator: an indicator of the y_true index containing a padded item, e.g. -1
     :return: DCG values for each slate and evaluation position, shape [batch_size, len(ats)]
     """
     y_true = y_true.clone()
@@ -56,7 +58,7 @@ def dcg(y_pred, y_true, ats=None, gain_function=lambda x: torch.pow(2, x) - 1):
         ats = [actual_length]
     ats = [min(at, actual_length) for at in ats]
 
-    true_sorted_by_preds = __apply_mask_and_get_true_sorted_by_preds(y_pred, y_true)
+    true_sorted_by_preds = __apply_mask_and_get_true_sorted_by_preds(y_pred, y_true, padding_indicator)
 
     dev = get_torch_device()
 
@@ -76,7 +78,7 @@ def dcg(y_pred, y_true, ats=None, gain_function=lambda x: torch.pow(2, x) - 1):
     return dcg
 
 
-def mrr(y_pred, y_true, ats=None):
+def mrr(y_pred, y_true, ats=None, padding_indicator=PADDED_Y_VALUE):
     """
     Mean Reciprocal Rank at k.
 
@@ -84,6 +86,7 @@ def mrr(y_pred, y_true, ats=None):
     :param y_pred: predictions from the model, shape [batch_size, slate_length]
     :param y_true: ground truth labels, shape [batch_size, slate_length]
     :param ats: optional list of ranks for MRR evaluation, if None, maximum rank is used
+    :param padding_indicator: an indicator of the y_true index containing a padded item, e.g. -1
     :return: MRR values for each slate and evaluation position, shape [batch_size, len(ats)]
     """
     y_true = y_true.clone()
@@ -92,7 +95,7 @@ def mrr(y_pred, y_true, ats=None):
     if ats is None:
         ats = [y_true.shape[1]]
 
-    true_sorted_by_preds = __apply_mask_and_get_true_sorted_by_preds(y_pred, y_true)
+    true_sorted_by_preds = __apply_mask_and_get_true_sorted_by_preds(y_pred, y_true, padding_indicator)
 
     values, indices = torch.max(true_sorted_by_preds, dim=1)
     indices = indices.type_as(values).unsqueeze(dim=0).t().expand(len(y_true), len(ats))
