@@ -7,7 +7,6 @@ HERE = pathlib.Path(__file__).parent
 README = (HERE / "README.md").read_text()
 
 reqs = [
-    "tensorflow==1.15.0",
     "torch==1.4.0",
     "torchvision==0.5.0",
     "scikit-learn==0.22.1",
@@ -15,7 +14,9 @@ reqs = [
     "numpy==1.18.1",
     "scipy==1.4.1",
     "attrs==19.3.0",
-    "flatten_dict==0.2.0"
+    "flatten_dict==0.2.0",
+    "tensorboardX==2.0.0",
+    "gcsfs==0.6.0"
 ]
 
 setup(

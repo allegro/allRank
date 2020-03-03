@@ -47,3 +47,7 @@ def get_path_from_local_uri(uri: Any) -> str:
         return parsed.netloc + parsed.path
     else:
         return uri
+
+
+def is_gs_path(uri) -> bool:
+    return urlparse(uri).scheme == "gs"
