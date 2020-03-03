@@ -8,7 +8,7 @@ from allrank.models.model_utils import get_torch_device
 def ndcg(y_pred, y_true, ats=None, gain_function=lambda x: torch.pow(2, x) - 1):
     """
     Normalized Discounted Cumulative Gain at k.
-    
+
     Compute NDCG at ranks given by ats or at the maximum rank if ats is None.
     :param y_pred: predictions from the model, shape [batch_size, slate_length]
     :param y_true: ground truth labels, shape [batch_size, slate_length]
@@ -26,8 +26,8 @@ def ndcg(y_pred, y_true, ats=None, gain_function=lambda x: torch.pow(2, x) - 1):
     return ndcg_
 
 
-def __apply_mask_and_get_true_sorted_by_preds(y_pred, y_true):
-    mask = y_true == PADDED_Y_VALUE
+def __apply_mask_and_get_true_sorted_by_preds(y_pred, y_true, padding_indicator=PADDED_Y_VALUE):
+    mask = y_true == padding_indicator
 
     y_pred[mask] = float('-inf')
     y_true[mask] = 0.0
