@@ -13,7 +13,7 @@ def generate_dummy_data(
     Generate dummy dataset to be dumped in libsvm format.
     """
     X = np.random.randn(num_queries * results_len, num_features)
-    y = np.maximum(0, (((X+1)/2).mean(axis=-1) * num_labels).astype(np.int32))
+    y = np.maximum(0, (((X + 1) / 2).mean(axis=-1) * num_labels).astype(np.int32))
     qid = np.repeat(np.arange(0, num_queries), results_len)
     return X, y, qid
 
