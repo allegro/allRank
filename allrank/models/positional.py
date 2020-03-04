@@ -15,7 +15,7 @@ from allrank.config import PositionalEncoding
 class FixedPositionalEncoding(nn.Module):
     """
     Class implementing fixed positional encodings.
-    
+
     Fixed positional encodings up to max_len position are computed once during object construction.
     """
     def __init__(self, d_model: int, max_len=5000):

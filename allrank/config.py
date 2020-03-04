@@ -1,6 +1,6 @@
 import json
 from collections import defaultdict
-from typing import Dict, List, Union
+from typing import Dict, List
 
 from attr import attrib, attrs
 
