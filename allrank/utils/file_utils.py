@@ -2,6 +2,7 @@ import os
 from typing import Any
 from urllib.parse import urlparse
 
+import gcsfs
 from attr import attrib, attrs
 from pkg_resources import Requirement, resource_filename
 
@@ -51,3 +52,8 @@ def get_path_from_local_uri(uri: Any) -> str:
 
 def is_gs_path(uri) -> bool:
     return urlparse(uri).scheme == "gs"
+
+
+def open_local_or_gs(path, mode):
+    open_func = gcsfs.GCSFileSystem().open if is_gs_path(path) else open
+    return open_func(path, mode)

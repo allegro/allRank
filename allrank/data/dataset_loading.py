@@ -1,6 +1,5 @@
 import os
 
-import gcsfs
 import numpy as np
 import torch
 from sklearn.datasets import load_svmlight_file
@@ -8,7 +7,7 @@ from torch.utils.data import DataLoader, Dataset
 from torchvision import transforms
 from torchvision.transforms import Compose
 
-from allrank.utils.file_utils import is_gs_path
+from allrank.utils.file_utils import open_local_or_gs
 from allrank.utils.ltr_logging import get_logger
 
 logger = get_logger()
@@ -175,8 +174,7 @@ def load_libsvm_role(input_path: str, role: str) -> LibSVMDataset:
     """
     path = os.path.join(input_path, "{}.txt".format(role))
     logger.info("will load {} data from {}".format(role, path))
-    open_func = gcsfs.GCSFileSystem().open if is_gs_path(path) else open
-    with open_func(path, "rb") as input_stream:
+    with open_local_or_gs(path, "rb") as input_stream:
         ds = LibSVMDataset.from_svm_file(input_stream)
     logger.info("{} DS shape: {}".format(role, ds.shape))
     return ds
