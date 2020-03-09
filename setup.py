@@ -16,12 +16,12 @@ reqs = [
     "attrs==19.3.0",
     "flatten_dict==0.2.0",
     "tensorboardX==2.0.0",
-    "gcsfs==0.6.0"
+    "gcsfs>=0.6.0"
 ]
 
 setup(
     name="allRank",
-    version="1.2.1",
+    version="1.2.2",
     description="allRank is a framework for training learning-to-rank neural models",
     long_description=README,
     long_description_content_type="text/markdown",
