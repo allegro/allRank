@@ -1,26 +1,23 @@
-import allrank.models.losses as losses
 import numpy as np
 import os
 import torch
+from allrank.click_models.base import RandomClickModel
+from allrank.click_models.click_utils import click_on_listings
 from allrank.config import Config
 from allrank.data.dataset_loading import load_libsvm_dataset, create_data_loaders
+from allrank.inference.inference_utils import rank_listings
 from allrank.models.model import make_model
 from allrank.models.model_utils import get_torch_device, CustomDataParallel
-from allrank.training.train_utils import fit
 from allrank.utils.command_executor import execute_command
-from allrank.utils.experiments import dump_experiment_result, assert_expected_metrics
 from allrank.utils.file_utils import create_output_dirs, PathsContainer
 from allrank.utils.ltr_logging import init_logger
-from allrank.utils.python_utils import dummy_context_mgr
 from argparse import ArgumentParser, Namespace
 from attr import asdict
-from functools import partial
 from pprint import pformat
-from torch import optim
 
 
 def parse_args() -> Namespace:
-    parser = ArgumentParser("allRank")
+    parser = ArgumentParser("allRank rank and apply click model")
     parser.add_argument("--job-dir", help="Base output path for all experiments", required=True)
     parser.add_argument("--run-id", help="Name of this run to be recorded (must be unique within output dir)",
                         required=True)
@@ -69,42 +66,28 @@ def run():
 
     # gpu support
     dev = get_torch_device()
-    logger.info("Model training will execute on {}".format(dev.type))
+    logger.info("Will use device {}".format(dev.type))
 
     # instantiate model
     model = make_model(n_features=n_features, **asdict(config.model, recurse=False))
     if torch.cuda.device_count() > 1:
         model = CustomDataParallel(model)
         logger.info("Model training will be distributed to {} GPUs.".format(torch.cuda.device_count()))
+
+    # load_model_dict
+
     model.to(dev)
 
-    # load optimizer, loss and LR scheduler
-    optimizer = getattr(optim, config.optimizer.name)(params=model.parameters(), **config.optimizer.args)
-    loss_func = partial(getattr(losses, config.loss.name), **config.loss.args)
-    if config.lr_scheduler.name:
-        scheduler = getattr(optim.lr_scheduler, config.lr_scheduler.name)(optimizer, **config.lr_scheduler.args)
-    else:
-        scheduler = None
+    train_listings = rank_listings(train_dl, model, dev)
+    val_listings = rank_listings(val_dl, model, dev)
 
-    with torch.autograd.detect_anomaly() if config.detect_anomaly else dummy_context_mgr():  # type: ignore
-        # run training
-        result = fit(
-            model=model,
-            loss_func=loss_func,
-            optimizer=optimizer,
-            scheduler=scheduler,
-            train_dl=train_dl,
-            valid_dl=val_dl,
-            config=config,
-            device=dev,
-            output_dir=paths.output_dir,
-            tensorboard_output_path=paths.tensorboard_output_path,
-            **asdict(config.training)
-        )
+    click_model = RandomClickModel(2)
 
-    dump_experiment_result(args, config, paths.output_dir, result)
+    train_click_listings = click_on_listings(train_listings, click_model, False)
+    val_click_listings = click_on_listings(val_listings, click_model, False)
 
-    assert_expected_metrics(result, config.expected_metrics)
+    # save clickthrough dataset
+    return train_click_listings, val_click_listings
 
 
 if __name__ == "__main__":
