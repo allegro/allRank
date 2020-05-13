@@ -13,10 +13,8 @@ def test_click_model_should_use_all_click_models():
         click_model.click(([], [1, 2])).tolist()
         for _ in range(20000)
     ])
-    assert np.sum(clicks[:, 0]) > 9950
-    assert np.sum(clicks[:, 0]) < 10050
-    assert np.sum(clicks[:, 1]) > 9950
-    assert np.sum(clicks[:, 1]) < 10050
+    assert 9950 < np.sum(clicks[:, 0]) < 10050
+    assert 9950 < np.sum(clicks[:, 1]) < 10050
 
 
 def test_click_model_should_combine_click_models_and():

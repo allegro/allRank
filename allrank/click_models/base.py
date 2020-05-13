@@ -84,10 +84,7 @@ class ConditionedClickModel(ClickModel):
 
     def click(self, documents):
         clicks_from_click_models = [click_model.click(documents) for click_model in self.click_models]
-        # for i, c in enumerate(clicks_from_click_models):
-        #     print("from click_model {} conditioned model got {} clicks {}".format(i, np.sum(c, -1), c))
-        result = self.combiner(clicks_from_click_models, 0)
-        return result
+        return self.combiner(clicks_from_click_models, 0)
 
 
 def combine_with_and(*click_models: ClickModel):

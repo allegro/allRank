@@ -1,5 +1,6 @@
 import numpy as np
-from allrank.click_models.base import RandomClickModel
+
+from allrank.click_models.base import RandomClickModel, OnlyRelevantClickModel
 from allrank.click_models.click_utils import click_on_listings
 
 
@@ -28,9 +29,9 @@ def test_click_on_listings_without_empty():
     np.random.seed(42)
 
     X = np.array([[[-1.0]], [[1.0]]])
-    y = [np.array([0]), np.array([0])]
+    y = [np.array([0]), np.array([1])]
 
-    click_model = RandomClickModel(2)
+    click_model = OnlyRelevantClickModel(1)
 
     listings_X, listings_y = click_on_listings((X, y), click_model, include_empty=False)
 
