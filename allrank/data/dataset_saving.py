@@ -1,10 +1,21 @@
+from typing import Iterable
+
 import numpy as np
 from sklearn.datasets import dump_svmlight_file
 
 from allrank.data.dataset_loading import PADDED_Y_VALUE
 
 
-def write_to_libsvm_without_masked(path: str, X, y):
+def write_to_libsvm_without_masked(path: str, X: Iterable[np.ndarray], y: Iterable[np.ndarray]) -> None:
+    """
+    This function writes given X's and y's as a libsvm format.
+    It supports padded documents - they are removed from the written dataset.
+    Listings are identified by a 'qid' column within the file.
+
+    :param path: a path to save libsvm file
+    :param X: Iterable of lists of document vectors
+    :param y: Iterable of lists of document relevancies
+    """
     Xs = []
     ys = []
     qids = []

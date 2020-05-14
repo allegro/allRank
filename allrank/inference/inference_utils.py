@@ -11,6 +11,16 @@ from allrank.models.model_utils import get_torch_device
 
 def rank_listings(train_ds: LibSVMDataset, val_ds: LibSVMDataset, model, config) \
         -> Tuple[Tuple[torch.Tensor, torch.Tensor], Tuple[torch.Tensor, torch.Tensor]]:
+    """
+    Ranks given datasets according to given model
+
+    :param train_ds: dataset of training listings
+    :param val_ds: dataset of validation listings
+    :param model: a model to use for scoring documents
+    :param config: config for DataLoaders
+    :return: Tuple of ranked datasets -> train and val, one for every passed dataset
+        every dataset is a Tuple of torch.Tensor - storing X and y in the descending order of the scores.
+    """
 
     train_dl, val_dl = create_data_loaders(
         train_ds, val_ds, num_workers=config.data.num_workers, batch_size=config.data.batch_size)

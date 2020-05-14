@@ -29,4 +29,4 @@ class EverythingButDuplicatesClickModel(ClickModel):
         np.fill_diagonal(dist, np.inf)
         indices = np.tril_indices(dist.shape[0])
         dist[indices] = np.inf
-        return 1 * ((dist > self.duplicate_margin)).min(0)
+        return 1 * (dist > self.duplicate_margin).min(0)
