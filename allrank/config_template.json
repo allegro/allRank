@@ -59,5 +59,12 @@
   {
   "val": <dict, keys are metric names are values are their expected values,
           useful for seeing if changes to your code degrade model performance of previously trained model>
+  },
+ "click_model":  <this is an optional section, used when running 'rank_and_click' script.
+                 it defines the implementation of the click model to use.
+                 For the list of click_models see allrank.click_models package
+    "name": <str, fully qualified name of a class to instantiate, e.g. `allrank.click_models.cascade_models.BaseCascadeModel`
+    "args": <dict, arguments of the click_model, empty if no arguments are needed, can contain nested {"name":..., "args":...}
+                   for nested object construction>
   }
 }
