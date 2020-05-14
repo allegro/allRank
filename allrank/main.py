@@ -104,10 +104,10 @@ def run():
 
     dump_experiment_result(args, config, paths.output_dir, result)
 
-    assert_expected_metrics(result, config.expected_metrics)
-
     if urlparse(args.job_dir).scheme == "gs":
         copy_local_to_gs(paths.local_base_output_path, args.job_dir)
+
+    assert_expected_metrics(result, config.expected_metrics)
 
 
 if __name__ == "__main__":
