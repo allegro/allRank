@@ -22,8 +22,12 @@ class MaskedRemainMasked(ClickModel):
         self.delegate_click_model = delegate_click_model
 
     def click(self, documents):
-        clicks = self.delegate_click_model.click(documents)
-        _, y = documents
-        mask = y == PADDED_Y_VALUE
-        clicks[mask] = PADDED_Y_VALUE
-        return clicks
+        X, y = documents
+        padded_values_mask = y == PADDED_Y_VALUE
+        real_X = X[~padded_values_mask]
+        real_y = y[~padded_values_mask]
+        clicks = self.delegate_click_model.click((real_X, real_y))
+        final_clicks = np.zeros_like(y)
+        final_clicks[padded_values_mask] = PADDED_Y_VALUE
+        final_clicks[~padded_values_mask] = clicks
+        return final_clicks

@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from typing import List
+from typing import List, Tuple
 
 import numpy as np
 
@@ -7,7 +7,7 @@ import numpy as np
 class ClickModel(ABC):
 
     @abstractmethod
-    def click(self, documents):
+    def click(self, documents: Tuple[np.ndarray, np.ndarray]):
         """
         return the mask for documents 1 if clicked, else 0.
 
@@ -44,14 +44,14 @@ class FixedClickModel(ClickModel):
 
     """
 
-    def __init__(self, clicks):
-        self.clicks = clicks
+    def __init__(self, click_positions):
+        self.click_positions = click_positions
 
     def click(self, documents):
         X, y = documents
-        mask = np.repeat(0, len(y))
-        mask[self.clicks] = 1
-        return mask
+        clicks = np.repeat(0, len(y))
+        clicks[self.click_positions] = 1
+        return clicks
 
 
 class MultipleClickModel(ClickModel):
