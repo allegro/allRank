@@ -1,6 +1,6 @@
 import json
 from collections import defaultdict
-from typing import Dict, List
+from typing import Dict, List, Optional
 
 from attr import attrib, attrs
 
@@ -75,6 +75,7 @@ class Config:
     val_metric = attrib(type=str, default=None)
     expected_metrics = attrib(type=Dict[str, Dict[str, float]], default={})
     detect_anomaly = attrib(type=bool, default=False)
+    click_model = attrib(type=Optional[NameArgsConfig], default=None)
 
     @classmethod
     def from_json(cls, config_path):
@@ -96,6 +97,8 @@ class Config:
         config["metrics"] = cls._parse_metrics(config["metrics"])
         config["lr_scheduler"] = NameArgsConfig(**config["lr_scheduler"])
         config["loss"] = NameArgsConfig(**config["loss"])
+        if "click_model" in config.keys():
+            config["click_model"] = NameArgsConfig(**config["click_model"])
         return cls(**config)
 
     @staticmethod

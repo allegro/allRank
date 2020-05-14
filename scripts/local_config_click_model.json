@@ -1,0 +1,69 @@
+{
+  "model": {
+    "fc_model": {
+      "sizes": [
+        64
+      ],
+      "input_norm": false,
+      "activation": null,
+      "dropout": 0.0
+    },
+    "transformer": {
+      "N": 1,
+      "d_ff": 64,
+      "h": 1,
+      "positional_encoding": null,
+      "dropout": 0.0
+    },
+    "post_model": {
+      "output_activation": "Sigmoid",
+      "d_output": 4
+    }
+  },
+  "data": {
+    "path": "/allrank/dummy_data",
+    "validation_ds_role": "vali",
+    "num_workers": 1,
+    "batch_size": 64,
+    "slate_length": 240
+  },
+  "optimizer": {
+    "name": "Adam",
+    "args": {
+      "lr": 0.001
+    }
+  },
+  "lr_scheduler": {
+    "name": "StepLR",
+    "args": {
+      "step_size": 3,
+      "gamma": 0.5
+    }
+  },
+  "training": {
+    "epochs": 4,
+    "early_stopping_patience": 100,
+    "gradient_clipping_norm": null
+  },
+  "val_metric": "ndcg@5",
+  "metrics": [
+    "ndcg@5"
+  ],
+  "loss": {
+    "name": "ordinal",
+    "args": {
+      "n": 4
+    }
+  },
+  "expected_metrics" : {
+    "val": {
+      "ndcg@5": 0.76
+    }
+  },
+  "click_model": {
+    "name":"allrank.click_models.base.OnlyRelevantClickModel",
+    "args": {
+      "relevancy_threshold" : 1
+    }
+  }
+}

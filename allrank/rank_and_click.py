@@ -15,6 +15,7 @@ from allrank.inference.inference_utils import rank_listings
 from allrank.models.model import make_model
 from allrank.models.model_utils import get_torch_device, CustomDataParallel, load_state_dict_from_file
 from allrank.utils.command_executor import execute_command
+from allrank.utils.config_utils import instantiate_from_recursive_name_args
 from allrank.utils.file_utils import create_output_dirs, PathsContainer
 from allrank.utils.ltr_logging import init_logger
 
@@ -24,7 +25,7 @@ def parse_args() -> Namespace:
     parser.add_argument("--job-dir", help="Base output path for all experiments", required=True)
     parser.add_argument("--run-id", help="Name of this run to be recorded (must be unique within output dir)",
                         required=True)
-    parser.add_argument("--config-file-name", required=True, type=str, help="Name of json file with config")
+    parser.add_argument("--config-file-name", required=True, type=str, help="Name of json file with model config")
     parser.add_argument("--input-model-path", required=True, type=str, help="Path to the model to read weights")
 
     return parser.parse_args()
@@ -81,8 +82,8 @@ def run():
 
     train_listings, val_listings = rank_listings(train_ds, val_ds, model, config)
 
-    # TODO prepare config and create click_model from config
-    click_model = RandomClickModel(2)
+    assert config.click_model is not None, "click_model must be defined in config for this run"
+    click_model = instantiate_from_recursive_name_args(name_args=config.click_model)
 
     train_click_listings = click_on_listings(train_listings, click_model, False)
     val_click_listings = click_on_listings(val_listings, click_model, False)
