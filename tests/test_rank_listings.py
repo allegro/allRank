@@ -1,9 +1,8 @@
 import numpy as np
-import torch
 from torch.utils.data import DataLoader
 from torch.utils.data import Dataset
 
-from allrank.inference.inference_utils import rank_listings
+from allrank.inference.inference_utils import __rank_listings
 from allrank.models.model import make_model
 
 
@@ -34,7 +33,7 @@ def test_rerank_listings():
     model = make_model(fc_model, None, post_model, n_dimensions)
 
     dataloader = DataLoader(ListBackedDataset(list(zip(X, y_true, indices))), batch_size=2)
-    listings_X, listings_y = rank_listings(dataloader, model, torch.device("cpu"))
+    listings_X, listings_y = __rank_listings(dataloader, model)
 
     assert len(listings_X) == len(X)
     assert len(listings_y) == len(y_true)

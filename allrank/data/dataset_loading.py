@@ -210,7 +210,7 @@ def load_libsvm_dataset(input_path: str, slate_length: int, validation_ds_role: 
     return train_ds, val_ds
 
 
-def create_data_loaders(train_ds, val_ds, num_workers, batch_size):
+def create_data_loaders(train_ds: LibSVMDataset, val_ds: LibSVMDataset, num_workers: int, batch_size: int):
     """
     Helper function creating train and validation data loaders with specified number of workers and batch sizes.
     :param train_ds: LibSVMDataset train dataset

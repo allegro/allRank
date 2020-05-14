@@ -19,7 +19,7 @@ def test_click_on_listings():
 
     listings_X, listings_y = click_on_listings((X, y), click_model, True)
 
-    assert listings_X.shape == X.shape  # checks that X has shape
+    assert len(listings_X) == X.shape[0]
     assert (listings_X == X).all()
     assert len(listings_y) == len(y)
     assert (np.sum(listings_y, axis=1) == np.repeat(n_clicks, n_listings)).all()
@@ -35,6 +35,6 @@ def test_click_on_listings_without_empty():
 
     listings_X, listings_y = click_on_listings((X, y), click_model, include_empty=False)
 
-    assert listings_X.shape == X[1:].shape  # checks that X has shape
+    assert len(listings_X) == X[1:].shape[0]
     assert (listings_X == X[1:]).all()
     assert listings_y == [[1]]

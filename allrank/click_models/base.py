@@ -11,7 +11,8 @@ class ClickModel(ABC):
         """
         return the mask for documents 1 if clicked, else 0.
 
-        :rtype: np.ndarray [ number_of_clicks ] -> a 0/1 mask of length same as documents - representing whether document was clicked or not
+        :rtype: np.ndarray [ number_of_clicks ] -> a 0/1/-1 mask of length same as documents -
+        representing whether document was clicked (1) or not (0) or remained masked (-1)
 
         :param documents: Tuple of :
            np.ndarray [ number_of_documents, dimensionality_of_latent_vector ], representing features of documents
