@@ -1,12 +1,12 @@
 import os
 from argparse import ArgumentParser, Namespace
 from pprint import pformat
+from urllib.parse import urlparse
 
 import numpy as np
 import torch
 from attr import asdict
 
-from allrank.click_models.base import RandomClickModel
 from allrank.click_models.click_utils import click_on_listings
 from allrank.config import Config
 from allrank.data.dataset_loading import load_libsvm_dataset
@@ -16,7 +16,7 @@ from allrank.models.model import make_model
 from allrank.models.model_utils import get_torch_device, CustomDataParallel, load_state_dict_from_file
 from allrank.utils.command_executor import execute_command
 from allrank.utils.config_utils import instantiate_from_recursive_name_args
-from allrank.utils.file_utils import create_output_dirs, PathsContainer
+from allrank.utils.file_utils import create_output_dirs, PathsContainer, copy_local_to_gs
 from allrank.utils.ltr_logging import init_logger
 
 
@@ -91,6 +91,9 @@ def run():
     # save clickthrough dataset
     write_to_libsvm_without_masked(os.path.join(paths.output_dir, "train.txt"), *train_click_listings)
     write_to_libsvm_without_masked(os.path.join(paths.output_dir, "valid.txt"), *val_click_listings)
+
+    if urlparse(args.job_dir).scheme == "gs":
+        copy_local_to_gs(paths.local_base_output_path, args.job_dir)
 
 
 if __name__ == "__main__":

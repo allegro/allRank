@@ -15,6 +15,7 @@ logger = get_logger()
 
 @attrs
 class PathsContainer:
+    local_base_output_path = attrib(type=str)
     base_output_path = attrib(type=str)
     output_dir = attrib(type=str)
     tensorboard_output_path = attrib(type=str)
@@ -23,14 +24,18 @@ class PathsContainer:
     @classmethod
     def from_args(cls, output, run_id, config_path, package_name="allrank"):
         base_output_path = get_path_from_local_uri(output)
-        output_dir = os.path.join(base_output_path, "results", run_id)
+        if is_gs_path(base_output_path):
+            local_base_output_path = tempfile.mkdtemp()
+        else:
+            local_base_output_path = base_output_path
+        output_dir = os.path.join(local_base_output_path, "results", run_id)
         tensorboard_output_path = os.path.join(base_output_path, "tb_evals", "single", run_id)
         if not os.path.exists(config_path):
             print("config not exists at {}, extracting config file path from package {}".format(config_path, package_name))
             config_path = resource_filename(Requirement.parse(
                 package_name), os.path.join(package_name, config_path))
         print("will read config from {}".format(config_path))
-        return cls(base_output_path, output_dir, tensorboard_output_path, config_path)
+        return cls(local_base_output_path, base_output_path, output_dir, tensorboard_output_path, config_path)
 
 
 def clean_up(path):
@@ -67,3 +72,9 @@ def copy_file_to_local(uri: str) -> str:
         gs_uri=uri, local_path=os.path.join(temp_dir, local_file))
     execute_command(command)
     return os.path.join(temp_dir, local_file)
+
+
+def copy_local_to_gs(source_local: str, destination_uri: str) -> None:
+    command = "gsutil cp -r {source_local}/* {destination_uri}".format(
+        source_local=source_local, destination_uri=destination_uri)
+    execute_command(command)

@@ -1,3 +1,5 @@
+from urllib.parse import urlparse
+
 import allrank.models.losses as losses
 import numpy as np
 import os
@@ -9,7 +11,7 @@ from allrank.models.model_utils import get_torch_device, CustomDataParallel
 from allrank.training.train_utils import fit
 from allrank.utils.command_executor import execute_command
 from allrank.utils.experiments import dump_experiment_result, assert_expected_metrics
-from allrank.utils.file_utils import create_output_dirs, PathsContainer
+from allrank.utils.file_utils import create_output_dirs, PathsContainer, copy_local_to_gs
 from allrank.utils.ltr_logging import init_logger
 from allrank.utils.python_utils import dummy_context_mgr
 from argparse import ArgumentParser, Namespace
@@ -39,12 +41,10 @@ def run():
 
     paths = PathsContainer.from_args(args.job_dir, args.run_id, args.config_file_name)
 
-    os.makedirs(paths.base_output_path, exist_ok=True)
-
     create_output_dirs(paths.output_dir)
-    logger = init_logger(paths.output_dir)
 
-    logger.info("will save data in {output_dir}".format(output_dir=paths.base_output_path))
+    logger = init_logger(paths.output_dir)
+    logger.info(f"created paths container {paths}")
 
     # read config
     config = Config.from_json(paths.config_path)
@@ -105,6 +105,9 @@ def run():
     dump_experiment_result(args, config, paths.output_dir, result)
 
     assert_expected_metrics(result, config.expected_metrics)
+
+    if urlparse(args.job_dir).scheme == "gs":
+        copy_local_to_gs(paths.local_base_output_path, args.job_dir)
 
 
 if __name__ == "__main__":
