@@ -13,7 +13,7 @@ from allrank.data.dataset_loading import load_libsvm_dataset
 from allrank.data.dataset_saving import write_to_libsvm_without_masked
 from allrank.inference.inference_utils import rank_listings
 from allrank.models.model import make_model
-from allrank.models.model_utils import get_torch_device, CustomDataParallel
+from allrank.models.model_utils import get_torch_device, CustomDataParallel, load_state_dict_from_file
 from allrank.utils.command_executor import execute_command
 from allrank.utils.file_utils import create_output_dirs, PathsContainer
 from allrank.utils.ltr_logging import init_logger
@@ -25,7 +25,7 @@ def parse_args() -> Namespace:
     parser.add_argument("--run-id", help="Name of this run to be recorded (must be unique within output dir)",
                         required=True)
     parser.add_argument("--config-file-name", required=True, type=str, help="Name of json file with config")
-    parser.add_argument("--input-model-dir", required=True, type=str, help="Path to the model to read weights")
+    parser.add_argument("--input-model-path", required=True, type=str, help="Path to the model to read weights")
 
     return parser.parse_args()
 
@@ -70,10 +70,13 @@ def run():
 
     # instantiate model
     model = make_model(n_features=n_features, **asdict(config.model, recurse=False))
+
+    model.load_state_dict(load_state_dict_from_file(args.input_model_path, dev))
+    logger.info(f"loaded model weights from {args.input_model_path}")
+
     if torch.cuda.device_count() > 1:
         model = CustomDataParallel(model)
         logger.info("Model training will be distributed to {} GPUs.".format(torch.cuda.device_count()))
-    # TODO load_model_dict
     model.to(dev)
 
     train_listings, val_listings = rank_listings(train_ds, val_ds, model, config)

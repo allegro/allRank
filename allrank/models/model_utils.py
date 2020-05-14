@@ -1,8 +1,11 @@
+from typing import Any
+
 import torch
 
 import numpy as np
 import torch.nn as nn
 
+from allrank.utils.file_utils import is_gs_path, copy_file_to_local
 from allrank.utils.ltr_logging import get_logger
 
 logger = get_logger()
@@ -48,3 +51,9 @@ class CustomDataParallel(nn.DataParallel):
         :return: scores of shape [batch_size, slate_length]
         """
         return self.module.score(x, mask, indices)
+
+def load_state_dict_from_file(path: str, device: Any):
+    if is_gs_path(path):
+        path = copy_file_to_local(path)
+
+    return torch.load(path, map_location=device)

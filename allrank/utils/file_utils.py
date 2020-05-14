@@ -1,4 +1,5 @@
 import os
+import tempfile
 from typing import Any
 from urllib.parse import urlparse
 
@@ -57,3 +58,12 @@ def is_gs_path(uri) -> bool:
 def open_local_or_gs(path, mode):
     open_func = gcsfs.GCSFileSystem().open if is_gs_path(path) else open
     return open_func(path, mode)
+
+
+def copy_file_to_local(uri: str) -> str:
+    temp_dir = tempfile.mkdtemp()
+    local_file = "local_file"
+    command = "gsutil cp {gs_uri} {local_path}".format(
+        gs_uri=uri, local_path=os.path.join(temp_dir, local_file))
+    execute_command(command)
+    return os.path.join(temp_dir, local_file)
