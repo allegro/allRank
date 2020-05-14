@@ -7,7 +7,18 @@ from allrank.click_models.base import ClickModel
 from allrank.data.dataset_loading import PADDED_Y_VALUE
 
 
-def click_on_listings(listings, click_model, include_empty) -> Tuple[List[torch.Tensor], List[List[int]]]:
+def click_on_listings(listings: Tuple[List[np.ndarray], List[np.ndarray]], click_model: ClickModel, include_empty: bool) \
+        -> Tuple[List[torch.Tensor], List[List[int]]]:
+    """
+    This metod runs a click model on a list of listings and returns new listings with `y` taken from clicks
+
+    :param listings: a Tuple of X, y:
+        X being a list of listings represented by document vectors
+        y being a list of listings represented by document relevancies
+    :param click_model: a click model to be applied to every listing
+    :param include_empty: if True - will return even listings that didn't get any click
+    :return: Tuple of X, clicks, X representing the same document vectors as input 'X', clicks representing click mask for every listing
+    """
     X, y = listings
     clicks = [MaskedRemainMasked(click_model).click(listing) for listing in zip(X, y)]
     X_with_clicks = [[X, listing_clicks] for X, listing_clicks in list(zip(X, clicks)) if
@@ -17,8 +28,17 @@ def click_on_listings(listings, click_model, include_empty) -> Tuple[List[torch.
 
 
 class MaskedRemainMasked(ClickModel):
+    """
+    This click model wraps another click model and:
+      1. ensures inner click model do not get documents that were padded
+      2. ensures padded documents get '-1' in 'clicked' vector
+    """
 
     def __init__(self, delegate_click_model: ClickModel):
+        """
+
+        :param delegate_click_model: inner click model that is run on the list of non-padded documents
+        """
         self.delegate_click_model = delegate_click_model
 
     def click(self, documents):
