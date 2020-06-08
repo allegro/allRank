@@ -9,8 +9,8 @@ from scipy.spatial.distance import cdist
 
 class BaseCascadeModel(ClickModel):
     """
-    this ClickModel simulates decaying probability of observing an item
-    and generates click when item's relevance is at least equal to a threshold
+    This ClickModel simulates decaying probability of observing an item
+    and clicks on an observed item given it's relevance is greater than or equal to a given threshold
 
     """
 
@@ -33,16 +33,16 @@ class BaseCascadeModel(ClickModel):
 class DiverseClicksModel(ClickModel):
     """
     A 'diverse-clicks' model from Seq2Slate paper https://arxiv.org/abs/1810.02019
-    It clicks on a documents from top to the bottom if:
+    It clicks on documents from top to the bottom if:
       1. a delegate click model decides to click on the document (in the original paper - CascadeModel
-      2. it is not closer than defined percentile of distances to a previously clicked document
+      2. it is no closer than a defined percentile of distances to a previously clicked document
     """
 
     def __init__(self, base_click_model, q_percentile=0.5):
         """
 
         :param base_click_model: a base click model
-        :param q_percentile: a percentile of pairwise distances that will be used as a distance threshold to tell if pair is a duplicate
+        :param q_percentile: a percentile of pairwise distances that will be used as a distance threshold to tell if a pair is a duplicate
         """
         self.base_click_model = base_click_model
         self.q_percentile = q_percentile

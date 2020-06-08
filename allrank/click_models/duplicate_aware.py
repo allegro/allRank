@@ -8,7 +8,7 @@ from allrank.click_models.base import ClickModel
 
 class EverythingButDuplicatesClickModel(ClickModel):
     """
-    this ClickModel clicks on every document, which was not previously clicked,
+    This ClickModel clicks on every document, which was not previously clicked,
     if the distance between this document and any previous is larger than given margin in given metric
     """
 
@@ -16,8 +16,9 @@ class EverythingButDuplicatesClickModel(ClickModel):
         """
 
         :param duplicate_margin: a margin to tell whether a pair of documents is treated as a duplicate.
-            If the distance is equal or below this value - this marks a duplicate
+            If the distance is less than or equal to this value - this marks a duplicate
         :param metric: a metric in which pairwise distances are calculated
+            (metric must be supported by `scipy.spatial.distance.cdist`)
         """
         self.duplicate_margin = duplicate_margin
         self.metric = metric

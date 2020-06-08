@@ -26,7 +26,7 @@ def test_rerank_listings():
 
     X = [np.random.rand(n_docs_per_listing, n_dimensions).astype(np.float32) for _ in range(n_listings)]
     y_true = [np.random.randint(0, 1, size=len(x)) for x in X]
-    indices = [np.repeat(0, len(x)) for x in X]
+    indices = [np.zeros(len(x)) for x in X]
 
     fc_model = {"sizes": [10], "input_norm": False, "activation": None, "dropout": None}
     post_model = {"d_output": 1}

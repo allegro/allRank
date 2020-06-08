@@ -1,5 +1,4 @@
 import importlib
-import os
 from typing import Any
 
 from allrank.config import NameArgsConfig

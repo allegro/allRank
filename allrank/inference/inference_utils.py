@@ -12,7 +12,7 @@ from allrank.models.model_utils import get_torch_device
 def rank_listings(train_ds: LibSVMDataset, val_ds: LibSVMDataset, model, config) \
         -> Tuple[Tuple[torch.Tensor, torch.Tensor], Tuple[torch.Tensor, torch.Tensor]]:
     """
-    Ranks given datasets according to given model
+    Ranks given datasets according to a given model
 
     :param train_ds: dataset of training listings
     :param val_ds: dataset of validation listings

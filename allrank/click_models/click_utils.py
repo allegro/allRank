@@ -1,4 +1,4 @@
-from typing import Tuple, List
+from typing import Tuple, List, Union
 
 import numpy as np
 import torch
@@ -7,7 +7,8 @@ from allrank.click_models.base import ClickModel
 from allrank.data.dataset_loading import PADDED_Y_VALUE
 
 
-def click_on_listings(listings: Tuple[List[np.ndarray], List[np.ndarray]], click_model: ClickModel, include_empty: bool) \
+def click_on_listings(listings: Tuple[Union[List[np.ndarray], torch.Tensor], Union[List[np.ndarray], torch.Tensor]],
+                      click_model: ClickModel, include_empty: bool) \
         -> Tuple[List[torch.Tensor], List[List[int]]]:
     """
     This metod runs a click model on a list of listings and returns new listings with `y` taken from clicks

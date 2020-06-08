@@ -4,7 +4,7 @@ from allrank.click_models.base import OnlyRelevantClickModel
 
 
 def test_only_relevant_click_model():
-    click_model = OnlyRelevantClickModel()
+    click_model = OnlyRelevantClickModel(1)
     assert click_model.click((np.array([[0, 1]]), [1])).tolist() == [1]
     assert click_model.click((np.array([[0, 1]]), [0])).tolist() == [0]
     assert click_model.click((np.array([[1, 1], [1, 0], [0, 0]]), [1, 0, 0])).tolist() == [1, 0, 0]

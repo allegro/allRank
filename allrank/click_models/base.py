@@ -7,16 +7,16 @@ import numpy as np
 
 class ClickModel(ABC):
     """
-    Base class for all click models. Specifies the contract to be delivered
+    Base class for all click models. Specifies the click model contract
     """
 
     @abstractmethod
     def click(self, documents: Tuple[np.ndarray, np.ndarray]) -> np.ndarray:
         """
-        applies a click model and returns the mask for documents.
+        Applies a click model and returns the mask for documents.
 
-        :rtype: np.ndarray [ number_of_documents ] -> a  mask of length same as documents -
-        representing whether document was clicked (1) or not (0) or remained masked (-1)
+        :rtype: np.ndarray [ number_of_documents ] -> a mask of the same length as the documents -
+        defining whether a document was clicked (1), not clicked (0) or is a padded element (-1)
 
         :param documents: Tuple of :
            np.ndarray [ number_of_documents, dimensionality_of_latent_vector ], representing features of documents
@@ -27,7 +27,7 @@ class ClickModel(ABC):
 
 class RandomClickModel(ClickModel):
     """
-    this ClickModel clicks a configured number of times on a random documents
+    This ClickModel clicks a configured number of times on random documents
     """
 
     def __init__(self, n_clicks: int):
@@ -40,15 +40,14 @@ class RandomClickModel(ClickModel):
     def click(self, documents: Tuple[np.ndarray, np.ndarray]) -> np.ndarray:
         X, y = documents
         clicks = np.random.choice(range(len(y)), size=self.n_clicks, replace=False)
-        mask = np.repeat(0, len(y))
+        mask = np.zeros(len(y), dtype=np.bool)
         mask[clicks] = 1
         return mask
 
 
 class FixedClickModel(ClickModel):
     """
-    this ClickModel clicks on a documents at fixed positions
-
+    This ClickModel clicks on documents at fixed positions
     """
 
     def __init__(self, click_positions: List[int]):
@@ -60,14 +59,14 @@ class FixedClickModel(ClickModel):
 
     def click(self, documents: Tuple[np.ndarray, np.ndarray]) -> np.ndarray:
         X, y = documents
-        clicks = np.repeat(0, len(y))
+        clicks = np.zeros(len(y), dtype=np.bool)
         clicks[self.click_positions] = 1
         return clicks
 
 
 class MultipleClickModel(ClickModel):
     """
-    This click model is delegating to one from given click models with given probability
+    This click model uses one of given click models with given probability
     """
 
     def __init__(self, click_models: List[ClickModel], probabilities: List[float]):
@@ -89,9 +88,8 @@ class MultipleClickModel(ClickModel):
 
 class ConditionedClickModel(ClickModel):
     """
-        This click model allows to combine multiple click models with a logical funciton
-
-        """
+    This click model allows to combine multiple click models with a logical funciton
+    """
 
     def __init__(self, click_models: List[ClickModel], combiner: Callable):
         """
@@ -109,8 +107,8 @@ class ConditionedClickModel(ClickModel):
 
 class MaxClicksModel(ClickModel):
     """
-    This click model that takes other click model and limits the number of clicks to given value.
-    Effectively keeping top <max_clicks> clicks
+    This click model takes other click model and limits the number of clicks to given value
+    effectively keeping top `max_clicks` clicks
     """
 
     def __init__(self, click_model: ClickModel, max_clicks: int):
@@ -132,13 +130,12 @@ class MaxClicksModel(ClickModel):
 
 class OnlyRelevantClickModel(ClickModel):
     """
-    this ClickModel clicks on a document when its relevancy is at least of predefined value
+    This ClickModel clicks on a document when its relevancy is greater that or equal to a predefined value
 
     """
 
     def __init__(self, relevancy_threshold: float):
         """
-
         :param relevancy_threshold: a minimum value of relevancy of a document to be clicked (inclusive)
         """
         self.relevancy_threshold = relevancy_threshold
