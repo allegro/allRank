@@ -10,7 +10,7 @@ def write_to_libsvm_without_masked(path: str, X: Iterable[np.ndarray], y: Iterab
     """
     This function writes given X's and y's in svmlight / libsvm file format.
     It supports padded documents - they are removed from the written dataset.
-    Listings are identified by a 'qid' column within the file.
+    Slates are identified by a 'qid' column within the file.
 
     :param path: a path to save libsvm file
     :param X: Iterable of lists of document vectors

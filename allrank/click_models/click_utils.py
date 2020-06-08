@@ -7,23 +7,23 @@ from allrank.click_models.base import ClickModel
 from allrank.data.dataset_loading import PADDED_Y_VALUE
 
 
-def click_on_listings(listings: Tuple[Union[List[np.ndarray], torch.Tensor], Union[List[np.ndarray], torch.Tensor]],
-                      click_model: ClickModel, include_empty: bool) \
+def click_on_slates(slates: Tuple[Union[List[np.ndarray], torch.Tensor], Union[List[np.ndarray], torch.Tensor]],
+                    click_model: ClickModel, include_empty: bool) \
         -> Tuple[List[torch.Tensor], List[List[int]]]:
     """
-    This metod runs a click model on a list of listings and returns new listings with `y` taken from clicks
+    This metod runs a click model on a list of slates and returns new slates with `y` taken from clicks
 
-    :param listings: a Tuple of X, y:
-        X being a list of listings represented by document vectors
-        y being a list of listings represented by document relevancies
-    :param click_model: a click model to be applied to every listing
-    :param include_empty: if True - will return even listings that didn't get any click
-    :return: Tuple of X, clicks, X representing the same document vectors as input 'X', clicks representing click mask for every listing
+    :param slates: a Tuple of X, y:
+        X being a list of slates represented by document vectors
+        y being a list of slates represented by document relevancies
+    :param click_model: a click model to be applied to every slate
+    :param include_empty: if True - will return even slates that didn't get any click
+    :return: Tuple of X, clicks, X representing the same document vectors as input 'X', clicks representing click mask for every slate
     """
-    X, y = listings
-    clicks = [MaskedRemainMasked(click_model).click(listing) for listing in zip(X, y)]
-    X_with_clicks = [[X, listing_clicks] for X, listing_clicks in list(zip(X, clicks)) if
-                     (np.sum(listing_clicks > 0) > 0 or include_empty)]
+    X, y = slates
+    clicks = [MaskedRemainMasked(click_model).click(slate) for slate in zip(X, y)]
+    X_with_clicks = [[X, slate_clicks] for X, slate_clicks in list(zip(X, clicks)) if
+                     (np.sum(slate_clicks > 0) > 0 or include_empty)]
     X, clicks = map(list, zip(*X_with_clicks))
     return X, clicks  # type: ignore
 

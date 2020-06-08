@@ -7,11 +7,11 @@ import numpy as np
 import torch
 from attr import asdict
 
-from allrank.click_models.click_utils import click_on_listings
+from allrank.click_models.click_utils import click_on_slates
 from allrank.config import Config
 from allrank.data.dataset_loading import load_libsvm_dataset
 from allrank.data.dataset_saving import write_to_libsvm_without_masked
-from allrank.inference.inference_utils import rank_listings
+from allrank.inference.inference_utils import rank_slates
 from allrank.models.model import make_model
 from allrank.models.model_utils import get_torch_device, CustomDataParallel, load_state_dict_from_file
 from allrank.utils.command_executor import execute_command
@@ -80,17 +80,17 @@ def run():
         logger.info("Model training will be distributed to {} GPUs.".format(torch.cuda.device_count()))
     model.to(dev)
 
-    train_listings, val_listings = rank_listings(train_ds, val_ds, model, config)
+    train_slates, val_slates = rank_slates(train_ds, val_ds, model, config)
 
     assert config.click_model is not None, "click_model must be defined in config for this run"
     click_model = instantiate_from_recursive_name_args(name_args=config.click_model)
 
-    train_click_listings = click_on_listings(train_listings, click_model, False)
-    val_click_listings = click_on_listings(val_listings, click_model, False)
+    train_click_slates = click_on_slates(train_slates, click_model, False)
+    val_click_slates = click_on_slates(val_slates, click_model, False)
 
     # save clickthrough dataset
-    write_to_libsvm_without_masked(os.path.join(paths.output_dir, "train.txt"), *train_click_listings)
-    write_to_libsvm_without_masked(os.path.join(paths.output_dir, "valid.txt"), *val_click_listings)
+    write_to_libsvm_without_masked(os.path.join(paths.output_dir, "train.txt"), *train_click_slates)
+    write_to_libsvm_without_masked(os.path.join(paths.output_dir, "valid.txt"), *val_click_slates)
 
     if urlparse(args.job_dir).scheme == "gs":
         copy_local_to_gs(paths.local_base_output_path, args.job_dir)

@@ -9,13 +9,13 @@ from allrank.data.dataset_loading import LibSVMDataset, create_data_loaders
 from allrank.models.model_utils import get_torch_device
 
 
-def rank_listings(train_ds: LibSVMDataset, val_ds: LibSVMDataset, model, config) \
+def rank_slates(train_ds: LibSVMDataset, val_ds: LibSVMDataset, model, config) \
         -> Tuple[Tuple[torch.Tensor, torch.Tensor], Tuple[torch.Tensor, torch.Tensor]]:
     """
     Ranks given datasets according to a given model
 
-    :param train_ds: dataset of training listings
-    :param val_ds: dataset of validation listings
+    :param train_ds: dataset of training slates
+    :param val_ds: dataset of validation slates
     :param model: a model to use for scoring documents
     :param config: config for DataLoaders
     :return: Tuple of ranked datasets -> train and val, one for every passed dataset
@@ -24,12 +24,12 @@ def rank_listings(train_ds: LibSVMDataset, val_ds: LibSVMDataset, model, config)
 
     train_dl, val_dl = create_data_loaders(
         train_ds, val_ds, num_workers=config.data.num_workers, batch_size=config.data.batch_size)
-    train_listings = __rank_listings(train_dl, model)
-    val_listings = __rank_listings(val_dl, model)
-    return train_listings, val_listings
+    train_slates = __rank_slates(train_dl, model)
+    val_slates = __rank_slates(val_dl, model)
+    return train_slates, val_slates
 
 
-def __rank_listings(dataloader: DataLoader, model) -> Tuple[torch.Tensor, torch.Tensor]:
+def __rank_slates(dataloader: DataLoader, model) -> Tuple[torch.Tensor, torch.Tensor]:
     reranked_X = []
     reranked_y = []
     model.eval()
