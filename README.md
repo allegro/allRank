@@ -65,4 +65,15 @@ You should run `scripts/ci.sh` to verify that code passes style guidelines and u
 
 ## License
 
-Apache 2 License
+This project was used for the research work [Context-Aware Learning to Rank with Self-Attention](https://arxiv.org/abs/2005.10084). If you use this project as a base for your research please cite:
+```
+@article{Pobrotyn2020ContextAwareLT,
+  title={Context-Aware Learning to Rank with Self-Attention},
+  author={Przemyslaw Pobrotyn and Tomasz Bartczak and Mikolaj Synowiec and Radoslaw Bialobrzeski and Jaroslaw Bojar},
+  journal={ArXiv},
+  year={2020},
+  volume={abs/2005.10084}
+}
+```
+
+Apart from that the code is published under Apache 2 License
