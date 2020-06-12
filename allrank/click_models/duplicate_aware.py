@@ -1,6 +1,7 @@
 from typing import Tuple
 
 import numpy as np
+import torch
 from scipy.spatial.distance import cdist
 
 from allrank.click_models.base import ClickModel
@@ -23,7 +24,7 @@ class EverythingButDuplicatesClickModel(ClickModel):
         self.duplicate_margin = duplicate_margin
         self.metric = metric
 
-    def click(self, documents: Tuple[np.ndarray, np.ndarray]) -> np.ndarray:
+    def click(self, documents: Tuple[torch.Tensor, torch.Tensor]) -> np.ndarray:
         X, y = documents
         dist = cdist(X, X, metric=self.metric)
         dist = np.triu(dist, k=1)

@@ -5,7 +5,7 @@ import torch
 
 from allrank.data.dataset_loading import PADDED_Y_VALUE
 from allrank.click_models.base import ClickModel
-from allrank.click_models.duplicate_aware import EverythingButDuplicatesClickModel
+from allrank.click_models.duplicate_aware import EverythingButDuplicatesClickModel, explain_structure
 from scipy.spatial.distance import cdist
 
 
@@ -69,6 +69,7 @@ class DiverseClicksModel(ClickModel):
         def not_similar(x_vec, clicked_X):
             cX = clicked_X.copy()
             cX.append(x_vec)
+            cX = torch.stack(cX, dim=0)
             cm = EverythingButDuplicatesClickModel(duplicate_margin)
             clicks = cm.click((cX, np.ones(len(cX))))
             last_element_clicked = clicks[-1]
