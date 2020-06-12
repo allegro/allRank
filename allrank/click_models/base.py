@@ -70,20 +70,20 @@ class MultipleClickModel(ClickModel):
     This click model uses one of given click models with given probability
     """
 
-    def __init__(self, click_models: List[ClickModel], probabilities: List[float]):
+    def __init__(self, dedicated_click_models: List[ClickModel], probabilities: List[float]):
         """
 
-        :param click_models: list of candidate click models
+        :param dedicated_click_models: list of click models to choose from
         :param probabilities: list of probabilities - must be of the same length as list of click models and sum to 1.0
         """
-        self.click_models = click_models
+        self.dedicated_click_models = dedicated_click_models
         assert math.isclose(np.sum(probabilities), 1.0, abs_tol=1e-5), \
             f"probabilities should sum to one, but got {probabilities} which sums to {np.sum(probabilities)}"
         self.probabilities = np.array(probabilities).cumsum()
 
     def click(self, documents: Tuple[torch.Tensor, torch.Tensor]) -> np.ndarray:
         index = np.argmax(np.random.rand() < self.probabilities)
-        result = self.click_models[index].click(documents)
+        result = self.dedicated_click_models[index].click(documents)
         return result
 
 
@@ -92,17 +92,17 @@ class ConditionedClickModel(ClickModel):
     This click model allows to combine multiple click models with a logical funciton
     """
 
-    def __init__(self, click_models: List[ClickModel], combiner: Callable):
+    def __init__(self, dedicated_click_models: List[ClickModel], combiner: Callable):
         """
 
-        :param click_models: list of click models to combine
+        :param dedicated_click_models: list of click models to combine
         :param combiner: a function applied to the result of clicks from click models - e.g. np.all or np.any
         """
-        self.click_models = click_models
+        self.dedicated_click_models = dedicated_click_models
         self.combiner = combiner
 
     def click(self, documents: Tuple[torch.Tensor, torch.Tensor]) -> np.ndarray:
-        clicks_from_click_models = [click_model.click(documents) for click_model in self.click_models]
+        clicks_from_click_models = [click_model.click(documents) for click_model in self.dedicated_click_models]
         return self.combiner(clicks_from_click_models, 0)
 
 
@@ -112,17 +112,17 @@ class MaxClicksModel(ClickModel):
     effectively keeping top `max_clicks` clicks
     """
 
-    def __init__(self, click_model: ClickModel, max_clicks: int):
+    def __init__(self, dedicated_click_model: ClickModel, max_clicks: int):
         """
 
-        :param click_model: a delegate click model to generate clicks
+        :param dedicated_click_model: a click model to generate clicks
         :param max_clicks: number of clicks that should be preserved
         """
-        self.click_model = click_model
+        self.dedicated_click_model = dedicated_click_model
         self.max_clicks = max_clicks
 
     def click(self, documents: Tuple[torch.Tensor, torch.Tensor]) -> np.ndarray:
-        underlying_clicks = self.click_model.click(documents)
+        underlying_clicks = self.dedicated_click_model.click(documents)
         if self.max_clicks is not None:
             max_clicks_mask = underlying_clicks.cumsum() <= self.max_clicks
             return underlying_clicks * max_clicks_mask

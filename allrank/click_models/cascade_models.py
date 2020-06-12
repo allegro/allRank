@@ -40,13 +40,13 @@ class DiverseClicksModel(ClickModel):
       2. it is no closer than a defined percentile of distances to a previously clicked document
     """
 
-    def __init__(self, base_click_model, q_percentile=0.5):
+    def __init__(self, dedicated_click_model, q_percentile=0.5):
         """
 
-        :param base_click_model: a base click model
+        :param dedicated_click_model: original, non-diversified click model
         :param q_percentile: a percentile of pairwise distances that will be used as a distance threshold to tell if a pair is a duplicate
         """
-        self.base_click_model = base_click_model
+        self.dedicated_click_model = dedicated_click_model
         self.q_percentile = q_percentile
 
     def __pairwise_distances_list(self, X):
@@ -74,7 +74,7 @@ class DiverseClicksModel(ClickModel):
             last_element_clicked = clicks[-1]
             return last_element_clicked == 1
 
-        relevant_for_click = self.base_click_model.click(documents)
+        relevant_for_click = self.dedicated_click_model.click(documents)
 
         clicked_Xs = []  # type: ignore
         indices_to_click = np.argwhere(relevant_for_click == 1)

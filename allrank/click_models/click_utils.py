@@ -7,8 +7,7 @@ from allrank.click_models.base import ClickModel
 from allrank.data.dataset_loading import PADDED_Y_VALUE
 
 
-def click_on_slates(slates: Tuple[torch.Tensor, torch.Tensor],
-                    click_model: ClickModel, include_empty: bool) \
+def click_on_slates(slates: Tuple[torch.Tensor, torch.Tensor], click_model: ClickModel, include_empty: bool) \
         -> Tuple[List[torch.Tensor], List[List[int]]]:
     """
     This metod runs a click model on a list of slates and returns new slates with `y` taken from clicks
@@ -35,19 +34,19 @@ class MaskedRemainMasked(ClickModel):
       2. ensures padded documents get '-1' in 'clicked' vector
     """
 
-    def __init__(self, delegate_click_model: ClickModel):
+    def __init__(self, dedicated_click_model: ClickModel):
         """
 
-        :param delegate_click_model: inner click model that is run on the list of non-padded documents
+        :param dedicated_click_model: a click model that is run on the list of non-padded documents
         """
-        self.delegate_click_model = delegate_click_model
+        self.dedicated_click_model = dedicated_click_model
 
     def click(self, documents: Tuple[torch.Tensor, torch.Tensor]):
         X, y = documents
         padded_values_mask = y == PADDED_Y_VALUE
         real_X = X[~padded_values_mask]
         real_y = y[~padded_values_mask]
-        clicks = self.delegate_click_model.click((real_X, real_y))
+        clicks = self.dedicated_click_model.click((real_X, real_y))
         final_clicks = np.zeros_like(y)
         final_clicks[padded_values_mask] = PADDED_Y_VALUE
         final_clicks[~padded_values_mask] = clicks
