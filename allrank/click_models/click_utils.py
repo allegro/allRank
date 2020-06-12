@@ -1,4 +1,4 @@
-from typing import Tuple, List, Union
+from typing import Tuple, List
 
 import numpy as np
 import torch
@@ -7,7 +7,7 @@ from allrank.click_models.base import ClickModel
 from allrank.data.dataset_loading import PADDED_Y_VALUE
 
 
-def click_on_slates(slates: Tuple[Union[List[np.ndarray], torch.Tensor], Union[List[np.ndarray], torch.Tensor]],
+def click_on_slates(slates: Tuple[torch.Tensor, torch.Tensor],
                     click_model: ClickModel, include_empty: bool) \
         -> Tuple[List[torch.Tensor], List[List[int]]]:
     """
@@ -24,8 +24,8 @@ def click_on_slates(slates: Tuple[Union[List[np.ndarray], torch.Tensor], Union[L
     clicks = [MaskedRemainMasked(click_model).click(slate) for slate in zip(X, y)]
     X_with_clicks = [[X, slate_clicks] for X, slate_clicks in list(zip(X, clicks)) if
                      (np.sum(slate_clicks > 0) > 0 or include_empty)]
-    X, clicks = map(list, zip(*X_with_clicks))
-    return X, clicks  # type: ignore
+    return_X, clicks = map(list, zip(*X_with_clicks))
+    return return_X, clicks  # type: ignore
 
 
 class MaskedRemainMasked(ClickModel):
@@ -42,7 +42,7 @@ class MaskedRemainMasked(ClickModel):
         """
         self.delegate_click_model = delegate_click_model
 
-    def click(self, documents):
+    def click(self, documents: Tuple[torch.Tensor, torch.Tensor]):
         X, y = documents
         padded_values_mask = y == PADDED_Y_VALUE
         real_X = X[~padded_values_mask]

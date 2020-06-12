@@ -1,6 +1,8 @@
 from typing import Tuple
 
 import numpy as np
+import torch
+
 from allrank.data.dataset_loading import PADDED_Y_VALUE
 from allrank.click_models.base import ClickModel
 from allrank.click_models.duplicate_aware import EverythingButDuplicatesClickModel
@@ -24,10 +26,10 @@ class BaseCascadeModel(ClickModel):
         self.eta = eta
         self.threshold = threshold
 
-    def click(self, documents: Tuple[np.ndarray, np.ndarray]) -> np.ndarray:
+    def click(self, documents: Tuple[torch.Tensor, torch.Tensor]) -> np.ndarray:
         X, y = documents
         observed_mask = (1 / np.arange(1, len(y) + 1) ** self.eta) >= np.random.rand(len(y))
-        return (y * observed_mask >= self.threshold).astype(int)
+        return (y * observed_mask >= self.threshold).numpy()
 
 
 class DiverseClicksModel(ClickModel):
@@ -52,7 +54,7 @@ class DiverseClicksModel(ClickModel):
         triu_indices = np.triu_indices(dist.shape[0] - 1)
         return dist[:-1, 1:][triu_indices]
 
-    def click(self, documents: Tuple[np.ndarray, np.ndarray]) -> np.ndarray:
+    def click(self, documents: Tuple[torch.Tensor, torch.Tensor]) -> np.ndarray:
         X, y = documents
 
         real_docs_mask = (y != PADDED_Y_VALUE)

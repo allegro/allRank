@@ -3,6 +3,7 @@ from abc import ABC, abstractmethod
 from typing import List, Tuple, Callable
 
 import numpy as np
+import torch
 
 
 class ClickModel(ABC):
@@ -11,7 +12,7 @@ class ClickModel(ABC):
     """
 
     @abstractmethod
-    def click(self, documents: Tuple[np.ndarray, np.ndarray]) -> np.ndarray:
+    def click(self, documents: Tuple[torch.Tensor, torch.Tensor]) -> np.ndarray:
         """
         Applies a click model and returns the mask for documents.
 
@@ -19,8 +20,8 @@ class ClickModel(ABC):
         defining whether a document was clicked (1), not clicked (0) or is a padded element (-1)
 
         :param documents: Tuple of :
-           np.ndarray [ number_of_documents, dimensionality_of_latent_vector ], representing features of documents
-           np.ndarray [ number_of_documents ] representing relevancy of documents
+           torch.Tensor [ number_of_documents, dimensionality_of_latent_vector ], representing features of documents
+           torch.Tensor [ number_of_documents ] representing relevancy of documents
         """
         pass
 
@@ -37,7 +38,7 @@ class RandomClickModel(ClickModel):
         """
         self.n_clicks = n_clicks
 
-    def click(self, documents: Tuple[np.ndarray, np.ndarray]) -> np.ndarray:
+    def click(self, documents: Tuple[torch.Tensor, torch.Tensor]) -> np.ndarray:
         X, y = documents
         clicks = np.random.choice(range(len(y)), size=self.n_clicks, replace=False)
         mask = np.zeros(len(y), dtype=np.bool)
@@ -57,7 +58,7 @@ class FixedClickModel(ClickModel):
         """
         self.click_positions = click_positions
 
-    def click(self, documents: Tuple[np.ndarray, np.ndarray]) -> np.ndarray:
+    def click(self, documents: Tuple[torch.Tensor, torch.Tensor]) -> np.ndarray:
         X, y = documents
         clicks = np.zeros(len(y), dtype=np.bool)
         clicks[self.click_positions] = 1
@@ -80,7 +81,7 @@ class MultipleClickModel(ClickModel):
             f"probabilities should sum to one, but got {probabilities} which sums to {np.sum(probabilities)}"
         self.probabilities = np.array(probabilities).cumsum()
 
-    def click(self, documents: Tuple[np.ndarray, np.ndarray]) -> np.ndarray:
+    def click(self, documents: Tuple[torch.Tensor, torch.Tensor]) -> np.ndarray:
         index = np.argmax(np.random.rand() < self.probabilities)
         result = self.click_models[index].click(documents)
         return result
@@ -100,7 +101,7 @@ class ConditionedClickModel(ClickModel):
         self.click_models = click_models
         self.combiner = combiner
 
-    def click(self, documents: Tuple[np.ndarray, np.ndarray]) -> np.ndarray:
+    def click(self, documents: Tuple[torch.Tensor, torch.Tensor]) -> np.ndarray:
         clicks_from_click_models = [click_model.click(documents) for click_model in self.click_models]
         return self.combiner(clicks_from_click_models, 0)
 
@@ -120,7 +121,7 @@ class MaxClicksModel(ClickModel):
         self.click_model = click_model
         self.max_clicks = max_clicks
 
-    def click(self, documents: Tuple[np.ndarray, np.ndarray]) -> np.ndarray:
+    def click(self, documents: Tuple[torch.Tensor, torch.Tensor]) -> np.ndarray:
         underlying_clicks = self.click_model.click(documents)
         if self.max_clicks is not None:
             max_clicks_mask = underlying_clicks.cumsum() <= self.max_clicks
@@ -140,6 +141,6 @@ class OnlyRelevantClickModel(ClickModel):
         """
         self.relevancy_threshold = relevancy_threshold
 
-    def click(self, documents: Tuple[np.ndarray, np.ndarray]) -> np.ndarray:
+    def click(self, documents: Tuple[torch.Tensor, torch.Tensor]) -> np.ndarray:
         X, y = documents
         return np.array(y) >= self.relevancy_threshold
