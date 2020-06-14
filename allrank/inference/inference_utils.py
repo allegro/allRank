@@ -1,4 +1,4 @@
-from typing import Tuple, Dict
+from typing import Tuple, Dict, List, Generator
 
 import torch
 from torch.utils.data.dataloader import DataLoader
@@ -6,6 +6,7 @@ from torch.utils.data.dataloader import DataLoader
 import allrank.models.losses as losses
 from allrank.config import Config
 from allrank.data.dataset_loading import LibSVMDataset
+from allrank.models.metrics import ndcg, dcg
 from allrank.models.model import LTRModel
 from allrank.models.model_utils import get_torch_device
 
@@ -57,3 +58,25 @@ def __rank_slates(dataloader: DataLoader, model: LTRModel) -> Tuple[torch.Tensor
     combined_X = torch.cat(reranked_X)
     combined_y = torch.cat(reranked_y)
     return combined_X, combined_y
+
+
+def __clicked_ndcg(ordered_clicks: List[int]) -> float:
+    return ndcg(torch.arange(start=len(ordered_clicks), end=0, step=-1, dtype=torch.float32)[None, :],
+                torch.tensor(ordered_clicks)[None, :]).item()
+
+
+def __clicked_dcg(ordered_clicks: List[int]) -> float:
+    return dcg(torch.arange(start=len(ordered_clicks), end=0, step=-1, dtype=torch.float32)[None, :],
+               torch.tensor(ordered_clicks)[None, :]).item()
+
+
+def metrics_on_clicked_slats(clicked_slates: Tuple[List[torch.Tensor], List[List[int]]]) \
+        -> Generator[Dict[str, float], None, None]:
+    Xs, ys = clicked_slates
+    for X, y in zip(Xs, ys):
+        yield {
+            "slate_length": len(y),
+            "no_of_clicks": sum(y > 0),  # type: ignore
+            "dcg": __clicked_dcg(y),
+            "ndcg": __clicked_ndcg(y)
+        }

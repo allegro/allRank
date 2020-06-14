@@ -4,6 +4,7 @@ from pprint import pformat
 from urllib.parse import urlparse
 
 import numpy as np
+import pandas as pd
 import torch
 from attr import asdict
 
@@ -11,7 +12,7 @@ from allrank.click_models.click_utils import click_on_slates
 from allrank.config import Config
 from allrank.data.dataset_loading import load_libsvm_dataset_role
 from allrank.data.dataset_saving import write_to_libsvm_without_masked
-from allrank.inference.inference_utils import rank_slates
+from allrank.inference.inference_utils import rank_slates, metrics_on_clicked_slats
 from allrank.models.model import make_model
 from allrank.models.model_utils import get_torch_device, CustomDataParallel, load_state_dict_from_file
 from allrank.utils.args_utils import split_as_strings
@@ -89,6 +90,16 @@ def run():
     # save clickthrough datasets
     for role, slates in clicked_slates.items():
         write_to_libsvm_without_masked(os.path.join(paths.output_dir, f"{role}.txt"), *slates)
+
+    # calculate metrics
+    metered_slates = {role: metrics_on_clicked_slats(slates) for role, slates in clicked_slates.items()}
+
+    for role, metrics in metered_slates.items():
+        metrics_df = pd.DataFrame(metrics)
+        logger.info(f"{role} metrics summary:")
+        logger.info(metrics_df.mean())
+        metrics_df.to_csv(os.path.join(paths.output_dir, f"{role}_metrics.csv"), index=False)
+        pd.DataFrame(metrics_df.mean()).T.to_csv(os.path.join(paths.output_dir, f"{role}_metrics_mean.csv"), index=False)
 
     if urlparse(args.job_dir).scheme == "gs":
         copy_local_to_gs(paths.local_base_output_path, args.job_dir)
