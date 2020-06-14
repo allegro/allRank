@@ -1,4 +1,5 @@
 import importlib
+from typing import List, Any
 
 
 def instantiate_class(module_name: str, class_name: str):
@@ -13,3 +14,7 @@ class dummy_context_mgr():
 
     def __exit__(self, exc_type, exc_value, traceback):
         return False
+
+
+def all_equal(values: List[Any]) -> bool:
+    return len(set(values)) == 1

@@ -1,35 +1,39 @@
-from typing import Tuple
+from typing import Tuple, Dict
 
+import torch
 from torch.utils.data.dataloader import DataLoader
 
 import allrank.models.losses as losses
-import torch
-
-from allrank.data.dataset_loading import LibSVMDataset, create_data_loaders
+from allrank.config import Config
+from allrank.data.dataset_loading import LibSVMDataset
+from allrank.models.model import LTRModel
 from allrank.models.model_utils import get_torch_device
 
 
-def rank_slates(train_ds: LibSVMDataset, val_ds: LibSVMDataset, model, config) \
-        -> Tuple[Tuple[torch.Tensor, torch.Tensor], Tuple[torch.Tensor, torch.Tensor]]:
+def rank_slates(datasets: Dict[str, LibSVMDataset], model: LTRModel, config: Config) \
+        -> Dict[str, Tuple[torch.Tensor, torch.Tensor]]:
     """
     Ranks given datasets according to a given model
 
-    :param train_ds: dataset of training slates
-    :param val_ds: dataset of validation slates
+    :param datasets: dictionary of role -> dataset that will be ranked
     :param model: a model to use for scoring documents
     :param config: config for DataLoaders
-    :return: Tuple of ranked datasets -> train and val, one for every passed dataset
+    :return: dictionary of role -> ranked dataset
         every dataset is a Tuple of torch.Tensor - storing X and y in the descending order of the scores.
     """
 
-    train_dl, val_dl = create_data_loaders(
-        train_ds, val_ds, num_workers=config.data.num_workers, batch_size=config.data.batch_size)
-    train_slates = __rank_slates(train_dl, model)
-    val_slates = __rank_slates(val_dl, model)
-    return train_slates, val_slates
+    dataloaders = {role: __create_data_loader(ds, config) for role, ds in datasets.items()}
+
+    ranked_slates = {role: __rank_slates(dl, model) for role, dl in dataloaders.items()}
+
+    return ranked_slates
 
 
-def __rank_slates(dataloader: DataLoader, model) -> Tuple[torch.Tensor, torch.Tensor]:
+def __create_data_loader(ds: LibSVMDataset, config: Config) -> DataLoader:
+    return DataLoader(ds, batch_size=config.data.batch_size, num_workers=config.data.num_workers, shuffle=False)
+
+
+def __rank_slates(dataloader: DataLoader, model: LTRModel) -> Tuple[torch.Tensor, torch.Tensor]:
     reranked_X = []
     reranked_y = []
     model.eval()

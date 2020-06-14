@@ -61,9 +61,16 @@
     }
   },
   "click_model": {
-    "name":"allrank.click_models.base.OnlyRelevantClickModel",
+    "name": "allrank.click_models.cascade_models.DiverseClicksModel",
     "args": {
-      "relevancy_threshold" : 1
+      "dedicated_click_model": {
+        "name": "allrank.click_models.cascade_models.BaseCascadeModel",
+        "args": {
+          "eta": 1,
+          "threshold": 2
+        }
+      },
+      "q_percentile": 0.5
     }
   }
 }

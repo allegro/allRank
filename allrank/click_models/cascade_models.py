@@ -2,11 +2,11 @@ from typing import Tuple
 
 import numpy as np
 import torch
-
-from allrank.data.dataset_loading import PADDED_Y_VALUE
-from allrank.click_models.base import ClickModel
-from allrank.click_models.duplicate_aware import EverythingButDuplicatesClickModel, explain_structure
 from scipy.spatial.distance import cdist
+
+from allrank.click_models.base import ClickModel
+from allrank.click_models.duplicate_aware import EverythingButDuplicatesClickModel
+from allrank.data.dataset_loading import PADDED_Y_VALUE
 
 
 class BaseCascadeModel(ClickModel):

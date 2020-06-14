@@ -9,15 +9,17 @@ from attr import asdict
 
 from allrank.click_models.click_utils import click_on_slates
 from allrank.config import Config
-from allrank.data.dataset_loading import load_libsvm_dataset
+from allrank.data.dataset_loading import load_libsvm_dataset_role
 from allrank.data.dataset_saving import write_to_libsvm_without_masked
 from allrank.inference.inference_utils import rank_slates
 from allrank.models.model import make_model
 from allrank.models.model_utils import get_torch_device, CustomDataParallel, load_state_dict_from_file
+from allrank.utils.args_utils import split_as_strings
 from allrank.utils.command_executor import execute_command
 from allrank.utils.config_utils import instantiate_from_recursive_name_args
 from allrank.utils.file_utils import create_output_dirs, PathsContainer, copy_local_to_gs
 from allrank.utils.ltr_logging import init_logger
+from allrank.utils.python_utils import all_equal
 
 
 def parse_args() -> Namespace:
@@ -27,6 +29,8 @@ def parse_args() -> Namespace:
                         required=True)
     parser.add_argument("--config-file-name", required=True, type=str, help="Name of json file with model config")
     parser.add_argument("--input-model-path", required=True, type=str, help="Path to the model to read weights")
+    parser.add_argument("--roles", required=True, type=split_as_strings,
+                        help="List of comma-separated dataset roles to load and process")
 
     return parser.parse_args()
 
@@ -55,22 +59,17 @@ def run():
     output_config_path = os.path.join(paths.output_dir, "used_config.json")
     execute_command("cp {} {}".format(paths.config_path, output_config_path))
 
-    # LibSVMDatasets
-    train_ds, val_ds = load_libsvm_dataset(
-        input_path=config.data.path,
-        slate_length=config.data.slate_length,
-        validation_ds_role=config.data.validation_ds_role,
-    )
+    datasets = {role: load_libsvm_dataset_role(role, config.data.path, config.data.slate_length) for role in args.roles}
 
-    n_features = train_ds.shape[-1]
-    assert n_features == val_ds.shape[-1], "Last dimensions of train_ds and val_ds do not match!"
+    n_features = [ds.shape[-1] for ds in datasets.values()]
+    assert all_equal(n_features), f"Last dimensions of datasets must match but got {n_features}"
 
     # gpu support
     dev = get_torch_device()
     logger.info("Will use device {}".format(dev.type))
 
     # instantiate model
-    model = make_model(n_features=n_features, **asdict(config.model, recurse=False))
+    model = make_model(n_features=n_features[0], **asdict(config.model, recurse=False))
 
     model.load_state_dict(load_state_dict_from_file(args.input_model_path, dev))
     logger.info(f"loaded model weights from {args.input_model_path}")
@@ -80,17 +79,16 @@ def run():
         logger.info("Model training will be distributed to {} GPUs.".format(torch.cuda.device_count()))
     model.to(dev)
 
-    train_slates, val_slates = rank_slates(train_ds, val_ds, model, config)
-
     assert config.click_model is not None, "click_model must be defined in config for this run"
     click_model = instantiate_from_recursive_name_args(name_args=config.click_model)
 
-    train_click_slates = click_on_slates(train_slates, click_model, False)
-    val_click_slates = click_on_slates(val_slates, click_model, False)
+    ranked_slates = rank_slates(datasets, model, config)
 
-    # save clickthrough dataset
-    write_to_libsvm_without_masked(os.path.join(paths.output_dir, "train.txt"), *train_click_slates)
-    write_to_libsvm_without_masked(os.path.join(paths.output_dir, "valid.txt"), *val_click_slates)
+    clicked_slates = {role: click_on_slates(slates, click_model, include_empty=False) for role, slates in ranked_slates.items()}
+
+    # save clickthrough datasets
+    for role, slates in clicked_slates.items():
+        write_to_libsvm_without_masked(os.path.join(paths.output_dir, f"{role}.txt"), *slates)
 
     if urlparse(args.job_dir).scheme == "gs":
         copy_local_to_gs(paths.local_base_output_path, args.job_dir)
