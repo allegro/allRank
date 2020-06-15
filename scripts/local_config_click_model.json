@@ -63,7 +63,7 @@
   "click_model": {
     "name": "allrank.click_models.cascade_models.DiverseClicksModel",
     "args": {
-      "dedicated_click_model": {
+      "inner_click_model": {
         "name": "allrank.click_models.cascade_models.BaseCascadeModel",
         "args": {
           "eta": 1,

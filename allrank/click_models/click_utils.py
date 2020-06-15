@@ -34,19 +34,19 @@ class MaskedRemainMasked(ClickModel):
       2. ensures padded documents get '-1' in 'clicked' vector
     """
 
-    def __init__(self, dedicated_click_model: ClickModel):
+    def __init__(self, inner_click_model: ClickModel):
         """
 
-        :param dedicated_click_model: a click model that is run on the list of non-padded documents
+        :param inner_click_model: a click model that is run on the list of non-padded documents
         """
-        self.dedicated_click_model = dedicated_click_model
+        self.inner_click_model = inner_click_model
 
     def click(self, documents: Tuple[torch.Tensor, torch.Tensor]):
         X, y = documents
         padded_values_mask = y == PADDED_Y_VALUE
         real_X = X[~padded_values_mask]
         real_y = y[~padded_values_mask]
-        clicks = self.dedicated_click_model.click((real_X, real_y))
+        clicks = self.inner_click_model.click((real_X, real_y))
         final_clicks = np.zeros_like(y)
         final_clicks[padded_values_mask] = PADDED_Y_VALUE
         final_clicks[~padded_values_mask] = clicks
