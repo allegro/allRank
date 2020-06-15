@@ -12,7 +12,7 @@ from allrank.click_models.click_utils import click_on_slates
 from allrank.config import Config
 from allrank.data.dataset_loading import load_libsvm_dataset_role
 from allrank.data.dataset_saving import write_to_libsvm_without_masked
-from allrank.inference.inference_utils import rank_slates, metrics_on_clicked_slats
+from allrank.inference.inference_utils import rank_slates, metrics_on_clicked_slates
 from allrank.models.model import make_model
 from allrank.models.model_utils import get_torch_device, CustomDataParallel, load_state_dict_from_file
 from allrank.utils.args_utils import split_as_strings
@@ -92,7 +92,7 @@ def run():
         write_to_libsvm_without_masked(os.path.join(paths.output_dir, f"{role}.txt"), *slates)
 
     # calculate metrics
-    metered_slates = {role: metrics_on_clicked_slats(slates) for role, slates in clicked_slates.items()}
+    metered_slates = {role: metrics_on_clicked_slates(slates) for role, slates in clicked_slates.items()}
 
     for role, metrics in metered_slates.items():
         metrics_df = pd.DataFrame(metrics)

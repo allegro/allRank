@@ -70,7 +70,7 @@ def __clicked_dcg(ordered_clicks: List[int]) -> float:
                torch.tensor(ordered_clicks)[None, :]).item()
 
 
-def metrics_on_clicked_slats(clicked_slates: Tuple[List[torch.Tensor], List[List[int]]]) \
+def metrics_on_clicked_slates(clicked_slates: Tuple[List[torch.Tensor], List[List[int]]]) \
         -> Generator[Dict[str, float], None, None]:
     Xs, ys = clicked_slates
     for X, y in zip(Xs, ys):
