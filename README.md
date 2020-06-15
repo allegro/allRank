@@ -63,9 +63,9 @@ To use it in training, simply pass the name (and args, if your loss method has s
 
 You should run `scripts/ci.sh` to verify that code passes style guidelines and unit tests.
 
-## License
+## Research
 
-This project was used for the research work [Context-Aware Learning to Rank with Self-Attention](https://arxiv.org/abs/2005.10084). If you use this project as a base for your research please cite:
+This framework was developed to support the research project [Context-Aware Learning to Rank with Self-Attention](https://arxiv.org/abs/2005.10084). If you use allRank in your research, please cite:
 ```
 @article{Pobrotyn2020ContextAwareLT,
   title={Context-Aware Learning to Rank with Self-Attention},
@@ -76,4 +76,6 @@ This project was used for the research work [Context-Aware Learning to Rank with
 }
 ```
 
-Apart from that the code is published under Apache 2 License
+## License
+
+Apache 2 License
