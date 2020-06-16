@@ -67,7 +67,7 @@ To use it in training, simply pass the name (and args, if your loss method has s
 To apply a click model you need to first have an allRank model trained.
 Next, run:
 
-```python allrank/rank_and_click.py --input-model-path <path_to_the_model_weights_file> --config_file_name allrank/config.json --run_id <the_name_of_your_experiment> --job_dir <the_place_to_save_results>``` 
+```python allrank/rank_and_click.py --input-model-path <path_to_the_model_weights_file> --roles <comma_separated_list_of_ds_roles_to_process e.g. train,valid> --config_file_name allrank/config.json --run_id <the_name_of_your_experiment> --job_dir <the_place_to_save_results>``` 
 
 The model will be used to rank all slates from the dataset specified in config. Next - a click model configured in config will be applied and the resulting click-through dataset will be written under ```<job_dir>/results/<run_id>``` in a libSVM format.
 The path to the results directory may then be used as an input for another allRank model training.
