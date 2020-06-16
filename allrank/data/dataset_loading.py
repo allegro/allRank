@@ -1,4 +1,5 @@
 import os
+from typing import Tuple
 
 import numpy as np
 import torch
@@ -192,7 +193,8 @@ def fix_length_to_longest_slate(ds: LibSVMDataset) -> Compose:
     return transforms.Compose([FixLength(int(ds.longest_query_length)), ToTensor()])
 
 
-def load_libsvm_dataset(input_path: str, slate_length: int, validation_ds_role: str):
+def load_libsvm_dataset(input_path: str, slate_length: int, validation_ds_role: str) \
+        -> Tuple[LibSVMDataset, LibSVMDataset]:
     """
     Helper function loading a train LibSVMDataset and a specified validation LibSVMDataset.
     :param input_path: directory containing the LibSVM files
@@ -201,16 +203,30 @@ def load_libsvm_dataset(input_path: str, slate_length: int, validation_ds_role: 
     :return: tuple of LibSVMDatasets containing train and validation datasets,
         where train slates are padded to slate_length and validation slates to val_ds.longest_query_length
     """
-    train_ds = load_libsvm_role(input_path, "train")
-    train_ds.transform = transforms.Compose([FixLength(slate_length), ToTensor()])
+    train_ds = load_libsvm_dataset_role("train", input_path, slate_length)
 
-    val_ds = load_libsvm_role(input_path, validation_ds_role)
-    val_ds.transform = fix_length_to_longest_slate(val_ds)
+    val_ds = load_libsvm_dataset_role(validation_ds_role, input_path, slate_length)
 
     return train_ds, val_ds
 
 
-def create_data_loaders(train_ds, val_ds, num_workers, batch_size):
+def load_libsvm_dataset_role(role: str, input_path: str, slate_length: int) -> LibSVMDataset:
+    """
+    Helper function loading a single role LibSVMDataset
+    :param role: the role of the dataset - specifies file name and padding behaviour
+    :param input_path: directory containing the LibSVM files
+    :param slate_length: target slate length of the training dataset
+    :return: loaded LibSVMDataset
+    """
+    ds = load_libsvm_role(input_path, role)
+    if role == "train":
+        ds.transform = transforms.Compose([FixLength(slate_length), ToTensor()])
+    else:
+        ds.transform = fix_length_to_longest_slate(ds)
+    return ds
+
+
+def create_data_loaders(train_ds: LibSVMDataset, val_ds: LibSVMDataset, num_workers: int, batch_size: int):
     """
     Helper function creating train and validation data loaders with specified number of workers and batch sizes.
     :param train_ds: LibSVMDataset train dataset

@@ -2,7 +2,6 @@ import numpy as np
 import torch
 
 from allrank.data.dataset_loading import PADDED_Y_VALUE
-from allrank.models.model_utils import get_torch_device
 
 
 def ndcg(y_pred, y_true, ats=None, gain_function=lambda x: torch.pow(2, x) - 1, padding_indicator=PADDED_Y_VALUE):
@@ -60,10 +59,8 @@ def dcg(y_pred, y_true, ats=None, gain_function=lambda x: torch.pow(2, x) - 1, p
 
     true_sorted_by_preds = __apply_mask_and_get_true_sorted_by_preds(y_pred, y_true, padding_indicator)
 
-    dev = get_torch_device()
-
     discounts = (torch.tensor(1) / torch.log2(torch.arange(true_sorted_by_preds.shape[1], dtype=torch.float) + 2.0)).to(
-        device=dev)
+        device=true_sorted_by_preds.device)
 
     gains = gain_function(true_sorted_by_preds)
 
@@ -100,9 +97,7 @@ def mrr(y_pred, y_true, ats=None, padding_indicator=PADDED_Y_VALUE):
     values, indices = torch.max(true_sorted_by_preds, dim=1)
     indices = indices.type_as(values).unsqueeze(dim=0).t().expand(len(y_true), len(ats))
 
-    dev = get_torch_device()
-
-    ats_rep = torch.tensor(data=ats, device=dev, dtype=torch.float32).expand(len(y_true), len(ats))
+    ats_rep = torch.tensor(data=ats, device=indices.device, dtype=torch.float32).expand(len(y_true), len(ats))
 
     within_at_mask = (indices < ats_rep).type(torch.float32)
 

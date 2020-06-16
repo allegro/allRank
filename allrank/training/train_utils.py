@@ -88,8 +88,8 @@ def fit(epochs, model, loss_func, optimizer, scheduler, train_dl, valid_dl, conf
         logger.info("Current learning rate: {}".format(get_current_lr(optimizer)))
 
         model.train()
-        # xb dim: [batch_size, listing_length, embedding_dim]
-        # yb dim: [batch_size, listing_length]
+        # xb dim: [batch_size, slate_length, embedding_dim]
+        # yb dim: [batch_size, slate_length]
 
         train_losses, train_nums = zip(
             *[loss_batch(model, loss_func, xb.to(device=device), yb.to(device=device), indices.to(device=device),

@@ -39,8 +39,8 @@ class FCModel(nn.Module):
         :return: output of shape [batch_size, slate_length, self.output_size]
         """
         x = self.input_norm(x)
-        for l in self.layers:
-            x = self.dropout(self.activation(l(x)))
+        for layer in self.layers:
+            x = self.dropout(self.activation(layer(x)))
         return x
 
 
