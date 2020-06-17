@@ -12,6 +12,7 @@ class TransformerConfig:
     h = attrib(type=int)
     positional_encoding = attrib(type=dict)
     dropout = attrib(type=float)
+    aux_output = attrib(type=Optional[str], default=None)
 
 
 @attrs
@@ -39,6 +40,7 @@ class ModelConfig:
 class PositionalEncoding:
     strategy = attrib(type=str)
     max_indices = attrib(type=int)
+    pe_alfa = attrib(type=Optional[float], default=None)
 
 
 @attrs

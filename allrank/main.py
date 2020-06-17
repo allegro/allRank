@@ -81,6 +81,22 @@ def run():
     # load optimizer, loss and LR scheduler
     optimizer = getattr(optim, config.optimizer.name)(params=model.parameters(), **config.optimizer.args)
     loss_func = partial(getattr(losses, config.loss.name), **config.loss.args)
+
+    auxiliary_output = config.model.transformer is not None and config.model.transformer.aux_output is not None
+    if auxiliary_output:
+        def auxilarize_loss(function):
+            def __auxilarized__(*args):
+                last_arg = args[1]
+                multiple_args = args[0]
+                losses = [function(x, last_arg) for x in multiple_args]
+                # logger.info(torch.stack(losses).cpu().detach().numpy())
+                return torch.stack(losses).mean()
+
+            return __auxilarized__
+
+        logger.info("auxiliarize loss function")
+        loss_func = auxilarize_loss(loss_func)
+
     if config.lr_scheduler.name:
         scheduler = getattr(optim.lr_scheduler, config.lr_scheduler.name)(optimizer, **config.lr_scheduler.args)
     else:

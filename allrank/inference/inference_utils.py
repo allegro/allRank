@@ -57,6 +57,10 @@ def __rank_slates(dataloader: DataLoader, model: LTRModel) -> Tuple[torch.Tensor
 
     combined_X = torch.cat(reranked_X)
     combined_y = torch.cat(reranked_y)
+
+    combined_X = combined_X.repeat_interleave(2,dim=1)
+    combined_y = combined_y.repeat_interleave(2,dim=1)
+
     return combined_X, combined_y
 
 

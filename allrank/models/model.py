@@ -48,7 +48,7 @@ class LTRModel(nn.Module):
     """
     This class represents a full neural Learning to Rank model with a given encoder model.
     """
-    def __init__(self, input_layer, encoder, output_layer):
+    def __init__(self, input_layer, encoder):
         """
         :param input_layer: the input block (e.g. FCModel)
         :param encoder: the encoding block (e.g. transformer.Encoder)
@@ -57,17 +57,6 @@ class LTRModel(nn.Module):
         super(LTRModel, self).__init__()
         self.input_layer = input_layer if input_layer else nn.Identity()
         self.encoder = encoder if encoder else first_arg_id
-        self.output_layer = output_layer
-
-    def prepare_for_output(self, x, mask, indices):
-        """
-        Forward pass through the input layer and encoder.
-        :param x: input of shape [batch_size, slate_length, input_dim]
-        :param mask: padding mask of shape [batch_size, slate_length]
-        :param indices: original item ranks used in positional encoding, shape [batch_size, slate_length]
-        :return: encoder output of shape [batch_size, slate_length, encoder_output_dim]
-        """
-        return self.encoder(self.input_layer(x), mask, indices)
 
     def forward(self, x, mask, indices):
         """
@@ -77,7 +66,7 @@ class LTRModel(nn.Module):
         :param indices: original item ranks used in positional encoding, shape [batch_size, slate_length]
         :return: model output of shape [batch_size, slate_length, output_dim]
         """
-        return self.output_layer(self.prepare_for_output(x, mask, indices))
+        return self.encoder(self.input_layer(x), mask, indices)
 
     def score(self, x, mask, indices):
         """
@@ -89,7 +78,9 @@ class LTRModel(nn.Module):
         :param indices: original item ranks used in positional encoding, shape [batch_size, slate_length]
         :return: scores of shape [batch_size, slate_length]
         """
-        return self.output_layer.score(self.prepare_for_output(x, mask, indices))
+        fwd = self.forward(x, mask, indices)
+        s = self.encoder.score(fwd)
+        return s
 
 
 class OutputLayer(nn.Module):
@@ -116,23 +107,23 @@ class OutputLayer(nn.Module):
         """
         return self.activation(self.w_1(x).squeeze(dim=2))
 
-    def score(self, x):
+    def score(self, output):
         """
         Forward pass through the OutputLayer and item scoring by summing the individual outputs if d_output > 1.
         :param x: input of shape [batch_size, slate_length, self.d_model]
         :return: output of shape [batch_size, slate_length]
         """
         if self.d_output > 1:
-            return self.forward(x).sum(-1)
+            return output.sum(-1)
         else:
-            return self.forward(x)
+            return output
 
 
 def make_model(fc_model, transformer, post_model, n_features):
     """
     Helper function for instantiating LTRModel.
     :param fc_model: FCModel used as input block
-    :param transformer: transformer Encoder used as encoder block
+    :param transformer: parameters dict for transformer
     :param post_model: parameters dict for OutputModel output block (excluding d_model)
     :param n_features: number of input features
     :return: LTR model instance
@@ -141,8 +132,9 @@ def make_model(fc_model, transformer, post_model, n_features):
         fc_model = FCModel(**fc_model, n_features=n_features)  # type: ignore
     d_model = n_features if not fc_model else fc_model.output_size
     if transformer:
-        transformer = make_transformer(n_features=d_model, **asdict(transformer, recurse=False))  # type: ignore
-    model = LTRModel(fc_model, transformer, OutputLayer(d_model, **post_model))
+        output_layer = OutputLayer(d_model, **post_model)
+        transformer = make_transformer(output_layer, n_features=d_model, **asdict(transformer, recurse=False))  # type: ignore
+    model = LTRModel(fc_model, transformer)
 
     # Initialize parameters with Glorot / fan_avg.
     for p in model.parameters():

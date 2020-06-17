@@ -14,6 +14,8 @@ import torch.nn.functional as F
 from allrank.config import PositionalEncoding
 from allrank.models.positional import _make_positional_encoding
 
+from allrank.models.positional import FixedPositionalEncoding, LearnedPositionalEncoding
+
 
 def clones(module, N):
     """
@@ -29,7 +31,7 @@ class Encoder(nn.Module):
     """
     Stack of Transformer encoder blocks with positional encoding.
     """
-    def __init__(self, layer, N, position):
+    def __init__(self, layer, output_layer, N, position, d_model, auxiliary_output):
         """
         :param layer: single building block to clone
         :param N: number of copies
@@ -37,8 +39,21 @@ class Encoder(nn.Module):
         """
         super(Encoder, self).__init__()
         self.layers = clones(layer, N)
+        self.output_layers = clones(output_layer, N)
         self.norm = LayerNorm(layer.size)
         self.position = position
+        self.auxiliary_output = auxiliary_output
+        if self.auxiliary_output:
+            if self.auxiliary_output == "fixed":
+                self.pe = FixedPositionalEncoding(d_model)
+            elif self.auxiliary_output == "learned":
+                self.pe = LearnedPositionalEncoding(d_model)
+            # elif self.auxiliary_output == "fixed_random":
+            #     self.pe = RandomStaticPositionalEncoding(d_model)
+            elif self.auxiliary_output == "identity":
+                self.pe = lambda x, y, z: x
+            else:
+                raise RuntimeError("aux output strategy should be either 'fixed' or 'learned' or 'identity' but was {}".format(auxiliary_output))
 
     def forward(self, x, mask, indices):
         """
@@ -51,9 +66,29 @@ class Encoder(nn.Module):
         if self.position:
             x = self.position(x, mask, indices)
         mask = mask.unsqueeze(-2)
-        for layer in self.layers:
-            x = layer(x, mask)
-        return self.norm(x)
+        if self.auxiliary_output:
+            outputs = []
+            next_x = x
+            for layer, output_layer in zip(self.layers, self.output_layers):
+                next_x = layer(next_x, mask)
+                normed = self.norm(next_x)
+                scored = output_layer(normed)
+                _, indices = scored.sort(descending=True, dim=-1)
+                next_x = self.pe(next_x, mask.squeeze(1), indices)
+                outputs.append(scored)
+            return outputs
+        else:
+            for layer in self.layers:
+                x = layer(x, mask)
+            return self.output_layers[-1](self.norm(x))
+
+    def score(self, x):
+        if self.auxiliary_output:
+            r = self.output_layers[-1].score(x[-1])
+            return r
+        else:
+            r = self.output_layers[-1].score(x)
+            return r
 
 
 class LayerNorm(nn.Module):
@@ -227,8 +262,9 @@ class PositionwiseFeedForward(nn.Module):
         return self.w_2(self.dropout(F.relu(self.w_1(x))))
 
 
-def make_transformer(N=6, d_ff=2048, h=8, dropout=0.1, n_features=136,
-                     positional_encoding: Optional[PositionalEncoding] = None):
+def make_transformer(output_layer, N=6, d_ff=2048, h=8, dropout=0.1, n_features=136,
+                     positional_encoding: Optional[PositionalEncoding] = None,
+                     aux_output = None):
     """
     Helper function for instantiating Transformer-based Encoder.
     :param N: number of Transformer blocks
@@ -244,4 +280,4 @@ def make_transformer(N=6, d_ff=2048, h=8, dropout=0.1, n_features=136,
 
     ff = PositionwiseFeedForward(n_features, d_ff, dropout)
     position = _make_positional_encoding(n_features, positional_encoding)
-    return Encoder(EncoderLayer(n_features, c(attn), c(ff), dropout), N, position)
+    return Encoder(EncoderLayer(n_features, c(attn), c(ff), dropout), output_layer, N, position, n_features, aux_output)

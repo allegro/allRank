@@ -9,15 +9,19 @@
       "dropout": 0.0
     },
     "transformer": {
-      "N": 1,
+      "N": 2,
       "d_ff": 64,
       "h": 1,
-      "positional_encoding": null,
+      "aux_output" : "fixed",
+      "positional_encoding": {
+        "strategy": "justtrain_fixed",
+        "max_indices": 100
+      },
       "dropout": 0.0
     },
     "post_model": {
       "output_activation": "Sigmoid",
-      "d_output": 4
+      "d_output": 1
     }
   },
   "data": {
@@ -47,17 +51,20 @@
   },
   "val_metric": "ndcg@5",
   "metrics": [
-    "ndcg@5"
+    "ndcg@5", "ndcg@10"
   ],
   "loss": {
-    "name": "ordinal",
+    "name": "lambdaLoss",
     "args": {
-      "n": 4
+      "weighing_scheme": "ndcgLoss2PP_scheme",
+      "k": 5000,
+      "mu": 10,
+      "sigma": 1.0
     }
   },
   "expected_metrics" : {
     "val": {
-      "ndcg@5": 0.76
+      "ndcg@5": 0.6
     }
   }
 }

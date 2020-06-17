@@ -10,6 +10,7 @@ import torch
 import torch.nn as nn
 
 from allrank.config import PositionalEncoding
+from allrank.data.dataset_loading import PADDED_Y_VALUE
 
 
 class FixedPositionalEncoding(nn.Module):
@@ -36,7 +37,7 @@ class FixedPositionalEncoding(nn.Module):
         self.padding_idx = pe.size()[0] - 1
         self.register_buffer('pe', pe)
 
-    def forward(self, x, mask, indices):
+    def forward(self, x, mask, indices, pe_alfa=1.0):
         """
         Forward pass through the FixedPositionalEncoding.
         :param x: input of shape [batch_size, slate_length, d_model]
@@ -46,7 +47,7 @@ class FixedPositionalEncoding(nn.Module):
         """
         padded_indices = indices.masked_fill(mask, self.padding_idx)
         padded_indices[padded_indices > self.padding_idx] = self.padding_idx
-        x = math.sqrt(self.pe.shape[1]) * x + self.pe[padded_indices, :]
+        x = x + pe_alfa * self.pe[padded_indices, :] / math.sqrt(self.pe.shape[1])
         return x
 
 
@@ -77,6 +78,42 @@ class LearnedPositionalEncoding(nn.Module):
         return x
 
 
+class JustTrainPE(nn.Module):
+    """
+    Class implementing learnable positional encodings.
+    """
+    def __init__(self, pe, pe_alfa: float):
+        """
+        :param d_model: dimensionality of the embeddings
+        :param max_len: maximum length of the sequence
+        """
+        super().__init__()
+
+        self.pe_alfa = pe_alfa
+
+        self.pe = pe
+
+    def forward(self, x, mask, indices):
+        """
+        Forward pass through the LearnedPositionalEncoding.
+        :param x: input of shape [batch_size, slate_length, d_model]
+        :param mask: padding mask of shape [batch_size, slate_length]
+        :param indices: original item ranks used in positional encoding, shape [batch_size, slate_length]
+        :return: output of shape [batch_size, slate_length, d_model]
+        """
+        if self.training:
+            # print("training")
+            return self.pe(x,mask,indices, pe_alfa=self.pe_alfa)
+        else:
+            # print(indices)
+            # print("evaling")
+            indices_copy = indices.clone()
+            indices_copy[indices_copy != PADDED_Y_VALUE] = 0
+            # print(indices_copy)
+            # return self.pe(x,mask,indices_copy)
+            return x
+
+
 def _make_positional_encoding(d_model: int, positional_encoding: Optional[PositionalEncoding]):
     """
     Helper function for instantiating positional encodings classes.
@@ -86,9 +123,18 @@ def _make_positional_encoding(d_model: int, positional_encoding: Optional[Positi
     """
     if positional_encoding is None:
         return None
-    elif positional_encoding.strategy == "fixed":
-        return FixedPositionalEncoding(d_model, max_len=positional_encoding.max_indices)
-    elif positional_encoding.strategy == "learned":
-        return LearnedPositionalEncoding(d_model, max_len=positional_encoding.max_indices)
+    strategy = positional_encoding.strategy
+    if positional_encoding.strategy.startswith("justtrain_"):
+        strategy=strategy[len("justtrain_"):]
+
+    if strategy == "fixed":
+        pe = FixedPositionalEncoding(d_model, max_len=positional_encoding.max_indices)
+    elif strategy == "learned":
+        pe = LearnedPositionalEncoding(d_model, max_len=positional_encoding.max_indices)
     else:
-        raise ValueError("Invalid positional encoding type: {}".format(positional_encoding.strategy))
+        raise ValueError("Invalid positional encoding type: {}".format(strategy))
+
+    if positional_encoding.strategy.startswith("justtrain_"):
+        return JustTrainPE(pe, positional_encoding.pe_alfa)
+    else:
+        return pe
