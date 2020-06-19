@@ -7,8 +7,8 @@ HERE = pathlib.Path(__file__).parent
 README = (HERE / "README.md").read_text()
 
 reqs = [
-    "torch==1.4.0",
-    "torchvision==0.5.0",
+    "torch==1.5.0",
+    "torchvision==0.6.0",
     "scikit-learn==0.22.1",
     "pandas==0.25.3",
     "numpy==1.18.1",

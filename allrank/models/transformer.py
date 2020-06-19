@@ -31,7 +31,7 @@ class Encoder(nn.Module):
     """
     Stack of Transformer encoder blocks with positional encoding.
     """
-    def __init__(self, layer, output_layer, N, position, d_model, auxiliary_output):
+    def __init__(self, layer, output_layer, N, position, d_model, auxiliary_output, div_output):
         """
         :param layer: single building block to clone
         :param N: number of copies
@@ -43,6 +43,10 @@ class Encoder(nn.Module):
         self.norm = LayerNorm(layer.size)
         self.position = position
         self.auxiliary_output = auxiliary_output
+        self.div_output = div_output
+        if self.div_output:
+            self.joint = nn.Linear(2, 1, bias=False)
+            self.div_proj = nn.Linear(d_model, d_model)
         if self.auxiliary_output:
             if self.auxiliary_output == "fixed":
                 self.pe = FixedPositionalEncoding(d_model)
@@ -80,7 +84,39 @@ class Encoder(nn.Module):
         else:
             for layer in self.layers:
                 x = layer(x, mask)
-            return self.output_layers[-1](self.norm(x))
+            normed_x = self.norm(x)
+            scores = self.output_layers[-1](normed_x)
+            if self.div_output:
+
+                _, indices = scores.sort(descending=True, dim=-1)
+                indices = torch.unsqueeze(indices, -1).repeat_interleave(normed_x.shape[-1], -1)
+                x_sorted = torch.gather(normed_x, dim=1, index=indices)
+                if "proj" in self.div_output:
+                    x_sorted = self.div_proj(x_sorted)
+                    # option - add projection here
+                cdist = 1 - cosine_pairwise(x_sorted)
+                # print("cdist")
+                # print(cdist[0])
+                distances_to_above = torch.tril(cdist)
+
+                # print("distances_to_above")
+                # print(distances_to_above[0])
+                # print(distances_to_above[0][0])
+                # print(distances_to_above[0][1])
+                if "max" in self.div_output:
+                    agg_distance_to_above, _ = distances_to_above.max(dim=2)
+                else:
+                    agg_distance_to_above, _ = distances_to_above.mean(dim=2)
+                # print("agg_distance_to_above")
+                # print(agg_distance_to_above[0])
+                # print(agg_distance_to_above[0][0])
+                # print(scores.shape)
+                # print(max_distance_to_above.shape)
+                agg_distance_to_above = agg_distance_to_above
+                scores = self.joint(torch.stack((scores, agg_distance_to_above), dim=2)).squeeze()
+                print(self.joint.weight)
+                # print(scores.shape)
+            return scores
 
     def score(self, x):
         if self.auxiliary_output:
@@ -90,6 +126,11 @@ class Encoder(nn.Module):
             r = self.output_layers[-1].score(x)
             return r
 
+def cosine_pairwise(x):
+    x = x.permute((1, 2, 0))
+    cos_sim_pairwise = F.cosine_similarity(x, x.unsqueeze(1), dim=-2)
+    cos_sim_pairwise = cos_sim_pairwise.permute((2, 0, 1))
+    return cos_sim_pairwise
 
 class LayerNorm(nn.Module):
     """
@@ -264,7 +305,7 @@ class PositionwiseFeedForward(nn.Module):
 
 def make_transformer(output_layer, N=6, d_ff=2048, h=8, dropout=0.1, n_features=136,
                      positional_encoding: Optional[PositionalEncoding] = None,
-                     aux_output = None):
+                     aux_output = None, div_output= None):
     """
     Helper function for instantiating Transformer-based Encoder.
     :param N: number of Transformer blocks
@@ -280,4 +321,5 @@ def make_transformer(output_layer, N=6, d_ff=2048, h=8, dropout=0.1, n_features=
 
     ff = PositionwiseFeedForward(n_features, d_ff, dropout)
     position = _make_positional_encoding(n_features, positional_encoding)
-    return Encoder(EncoderLayer(n_features, c(attn), c(ff), dropout), output_layer, N, position, n_features, aux_output)
+    return Encoder(EncoderLayer(n_features, c(attn), c(ff), dropout), output_layer, N, position,
+                   n_features, aux_output, div_output)

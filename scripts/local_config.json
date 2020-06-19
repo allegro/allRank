@@ -9,14 +9,11 @@
       "dropout": 0.0
     },
     "transformer": {
-      "N": 2,
+      "N": 1,
       "d_ff": 64,
       "h": 1,
-      "aux_output" : "fixed",
-      "positional_encoding": {
-        "strategy": "justtrain_fixed",
-        "max_indices": 100
-      },
+      "div_output" : "max",
+      "positional_encoding": null,
       "dropout": 0.0
     },
     "post_model": {
@@ -29,7 +26,7 @@
     "validation_ds_role": "vali",
     "num_workers": 1,
     "batch_size": 64,
-    "slate_length": 240
+    "slate_length": 26
   },
   "optimizer": {
     "name": "Adam",
@@ -45,7 +42,7 @@
     }
   },
   "training": {
-    "epochs": 4,
+    "epochs": 5,
     "early_stopping_patience": 100,
     "gradient_clipping_norm": null
   },
@@ -66,5 +63,6 @@
     "val": {
       "ndcg@5": 0.6
     }
-  }
+  },
+  "detect_anomaly" : true
 }

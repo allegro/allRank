@@ -242,5 +242,5 @@ def create_data_loaders(train_ds: LibSVMDataset, val_ds: LibSVMDataset, num_work
 
     # Please note that the batch size for validation dataloader is twice the total_batch_size
     train_dl = DataLoader(train_ds, batch_size=total_batch_size, num_workers=num_workers, shuffle=True)
-    val_dl = DataLoader(val_ds, batch_size=total_batch_size * 2, num_workers=num_workers, shuffle=False)
+    val_dl = DataLoader(val_ds, batch_size=total_batch_size // 8, num_workers=num_workers, shuffle=False)
     return train_dl, val_dl

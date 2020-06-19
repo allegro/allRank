@@ -98,6 +98,8 @@ def fit(epochs, model, loss_func, optimizer, scheduler, train_dl, valid_dl, conf
         train_loss = np.sum(np.multiply(train_losses, train_nums)) / np.sum(train_nums)
         train_metrics = compute_metrics(config.metrics, model, train_dl, device)
 
+        logger.info("Starting validation...")
+
         model.eval()
         with torch.no_grad():
             val_losses, val_nums = zip(

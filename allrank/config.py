@@ -13,6 +13,7 @@ class TransformerConfig:
     positional_encoding = attrib(type=dict)
     dropout = attrib(type=float)
     aux_output = attrib(type=Optional[str], default=None)
+    div_output = attrib(type=Optional[str], default=None)
 
 
 @attrs
