@@ -46,7 +46,7 @@
     "early_stopping_patience": <int, number of epochs for early stopping>
     "gradient_clipping_norm": <Optional[float]
   },
-  "metrics": <list of metrics for evaluation of the form name@k where name is the name of the metric
+  "metrics": <list of metrics for evaluation of the form name_k where name is the name of the metric
               as defined in models/metrics.py and k is the rank used for evaluation>,
 "loss":
   {
