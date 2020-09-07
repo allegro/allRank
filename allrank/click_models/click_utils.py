@@ -1,4 +1,4 @@
-from typing import Tuple, List
+from typing import List, Tuple, Union
 
 import numpy as np
 import torch
@@ -7,8 +7,8 @@ from allrank.click_models.base import ClickModel
 from allrank.data.dataset_loading import PADDED_Y_VALUE
 
 
-def click_on_slates(slates: Tuple[torch.Tensor, torch.Tensor], click_model: ClickModel, include_empty: bool) \
-        -> Tuple[List[torch.Tensor], List[List[int]]]:
+def click_on_slates(slates: Union[Tuple[np.ndarray, np.ndarray], Tuple[torch.Tensor, torch.Tensor]],
+                    click_model: ClickModel, include_empty: bool) -> Tuple[List[Union[np.ndarray, torch.Tensor]], List[List[int]]]:
     """
     This metod runs a click model on a list of slates and returns new slates with `y` taken from clicks
 
@@ -41,7 +41,7 @@ class MaskedRemainMasked(ClickModel):
         """
         self.inner_click_model = inner_click_model
 
-    def click(self, documents: Tuple[torch.Tensor, torch.Tensor]):
+    def click(self, documents: Union[Tuple[np.ndarray, np.ndarray], Tuple[torch.Tensor, torch.Tensor]]) -> np.ndarray:
         X, y = documents
         padded_values_mask = y == PADDED_Y_VALUE
         real_X = X[~padded_values_mask]
