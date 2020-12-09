@@ -26,7 +26,7 @@ def write_to_libsvm_without_masked(path: str, X: Iterable[np.ndarray], y: Iterab
         ys.append(y[mask])  # type:ignore
         qids.append(np.repeat(qid, len(y[mask])))  # type:ignore
         qid += 1
-    Xs = np.vstack(Xs)
+    Xs = np.vstack(Xs)  # type:ignore
     ys = np.concatenate(ys)
     qids = np.concatenate(qids)
     dump_svmlight_file(Xs, ys, path, query_id=qids)

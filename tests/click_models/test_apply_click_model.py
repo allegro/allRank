@@ -12,7 +12,7 @@ def test_click_on_slates():
     n_dimensions = 10
 
     X = np.random.rand(n_slates, n_docs_per_slate, n_dimensions).astype(np.float32)
-    y = [np.random.randint(0, 4, size=len(x)) for x in X]
+    y = np.vstack([np.random.randint(0, 4, size=len(x)) for x in X])
 
     n_clicks = 2
     click_model = RandomClickModel(n_clicks)
@@ -29,7 +29,7 @@ def test_click_on_slates_without_empty():
     np.random.seed(42)
 
     X = np.array([[[-1.0]], [[1.0]]])
-    y = [np.array([0]), np.array([1])]
+    y = np.vstack([np.array([0]), np.array([1])])
 
     click_model = OnlyRelevantClickModel(1)
 

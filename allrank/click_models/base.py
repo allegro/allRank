@@ -41,7 +41,7 @@ class RandomClickModel(ClickModel):
     def click(self, documents: Tuple[torch.Tensor, torch.Tensor]) -> np.ndarray:
         X, y = documents
         clicks = np.random.choice(range(len(y)), size=self.n_clicks, replace=False)
-        mask = np.zeros(len(y), dtype=np.bool)
+        mask = np.zeros(len(y), dtype=bool)
         mask[clicks] = 1
         return mask
 
@@ -60,7 +60,7 @@ class FixedClickModel(ClickModel):
 
     def click(self, documents: Tuple[torch.Tensor, torch.Tensor]) -> np.ndarray:
         X, y = documents
-        clicks = np.zeros(len(y), dtype=np.bool)
+        clicks = np.zeros(len(y), dtype=bool)
         clicks[self.click_positions] = 1
         return clicks
 
@@ -83,7 +83,7 @@ class MultipleClickModel(ClickModel):
 
     def click(self, documents: Tuple[torch.Tensor, torch.Tensor]) -> np.ndarray:
         index = np.argmax(np.random.rand() < self.probabilities)
-        result = self.inner_click_models[index].click(documents)
+        result = self.inner_click_models[index].click(documents)  # type: ignore
         return result
 
 

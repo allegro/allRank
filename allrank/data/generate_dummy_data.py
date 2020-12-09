@@ -3,8 +3,8 @@ from typing import Any, Dict
 from typing import Tuple
 
 import os
-import numpy as np
 from sklearn.datasets import dump_svmlight_file
+import numpy as np
 
 
 def generate_dummy_data(

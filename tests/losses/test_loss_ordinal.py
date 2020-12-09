@@ -30,8 +30,7 @@ def test_ordinal_single_doc():
     y_true = [1.0]
 
     result = loss_wrap(y_pred, y_true)
-    expected = [xe(1, 0.8) + xe(0, 0.6)]
-    expected = np.mean(expected)
+    expected = np.mean([xe(1, 0.8) + xe(0, 0.6)])
 
     assert not math.isnan(result) and not math.isinf(result)
     assert (result == approx(expected))
@@ -42,8 +41,7 @@ def test_ordinal_simple():
     y_true = [2.0, 1.0, 0.0]
 
     result = loss_wrap(y_pred, y_true)
-    expected = [xe(1, 0.8) + xe(1, 0.7), xe(1, 0.4) + xe(0, 0.3), xe(0, 0.2) + xe(0, 0.1)]
-    expected = np.mean(expected)
+    expected = np.mean([xe(1, 0.8) + xe(1, 0.7), xe(1, 0.4) + xe(0, 0.3), xe(0, 0.2) + xe(0, 0.1)])
 
     assert not math.isnan(result) and not math.isinf(result)
     assert (result == approx(expected))
@@ -54,8 +52,7 @@ def test_ordinal_single_doc_padded():
     y_true = [1.0, PADDED_Y_VALUE]
 
     result = loss_wrap(y_pred, y_true)
-    expected = [xe(1, 0.8) + xe(0, 0.6)]
-    expected = np.mean(expected)
+    expected = np.mean([xe(1, 0.8) + xe(0, 0.6)])
 
     assert not math.isnan(result) and not math.isinf(result)
     assert (result == approx(expected))

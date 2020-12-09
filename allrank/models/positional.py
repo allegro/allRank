@@ -46,7 +46,7 @@ class FixedPositionalEncoding(nn.Module):
         """
         padded_indices = indices.masked_fill(mask, self.padding_idx)
         padded_indices[padded_indices > self.padding_idx] = self.padding_idx
-        x = math.sqrt(self.pe.shape[1]) * x + self.pe[padded_indices, :]
+        x = math.sqrt(self.pe.shape[1]) * x + self.pe[padded_indices, :]  # type: ignore
         return x
 
 
