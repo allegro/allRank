@@ -7,4 +7,4 @@ flake8-blind-except==0.1.1
 flake8-debugger==1.4.0
 flake8-print==2.0.2
 flake8-tuple==0.2.13
-mypy==0.720
+mypy==0.790
