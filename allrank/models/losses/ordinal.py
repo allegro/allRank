@@ -25,7 +25,7 @@ def with_ordinals(y, n, padded_value_indicator=PADDED_Y_VALUE):
 def ordinal(y_pred, y_true, n, padded_value_indicator=PADDED_Y_VALUE):
     """
     Ordinal loss.
-    :param y_pred: predictions from the model, shape [batch_size, slate_length]
+    :param y_pred: predictions from the model, shape [batch_size, slate_length, n]
     :param y_true: ground truth labels, shape [batch_size, slate_length]
     :param n: number of ordinal values, int
     :param padded_value_indicator: an indicator of the y_true index containing a padded item, e.g. -1
