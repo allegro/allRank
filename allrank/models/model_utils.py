@@ -26,7 +26,7 @@ def get_num_params(model: nn.Module) -> int:
     """
     model_parameters = filter(lambda p: p.requires_grad, model.parameters())
     params = sum([np.prod(p.size()) for p in model_parameters])
-    return params
+    return params  # type: ignore
 
 
 def log_num_params(num_params: int) -> None:
@@ -50,7 +50,7 @@ class CustomDataParallel(nn.DataParallel):
         :param indices: original item ranks used in positional encoding, shape [batch_size, slate_length]
         :return: scores of shape [batch_size, slate_length]
         """
-        return self.module.score(x, mask, indices)
+        return self.module.score(x, mask, indices)  # type: ignore
 
 
 def load_state_dict_from_file(path: str, device: Any):

@@ -23,7 +23,7 @@ def click_on_slates(slates: Union[Tuple[np.ndarray, np.ndarray], Tuple[torch.Ten
     clicks = [MaskedRemainMasked(click_model).click(slate) for slate in zip(X, y)]
     X_with_clicks = [[X, slate_clicks] for X, slate_clicks in list(zip(X, clicks)) if
                      (np.sum(slate_clicks > 0) > 0 or include_empty)]
-    return_X, clicks = map(list, zip(*X_with_clicks))
+    return_X, clicks = map(list, zip(*X_with_clicks))  # type: ignore
     return return_X, clicks  # type: ignore
 
 

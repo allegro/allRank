@@ -89,10 +89,10 @@ def run():
 
     # save clickthrough datasets
     for role, slates in clicked_slates.items():
-        write_to_libsvm_without_masked(os.path.join(paths.output_dir, f"{role}.txt"), *slates)
+        write_to_libsvm_without_masked(os.path.join(paths.output_dir, f"{role}.txt"), *slates)  # type: ignore
 
     # calculate metrics
-    metered_slates = {role: metrics_on_clicked_slates(slates) for role, slates in clicked_slates.items()}
+    metered_slates = {role: metrics_on_clicked_slates(slates) for role, slates in clicked_slates.items()}  # type: ignore
 
     for role, metrics in metered_slates.items():
         metrics_df = pd.DataFrame(metrics)

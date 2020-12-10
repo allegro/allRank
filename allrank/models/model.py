@@ -23,14 +23,14 @@ class FCModel(nn.Module):
         """
         super(FCModel, self).__init__()
         sizes.insert(0, n_features)
-        self.layers = [nn.Linear(size_in, size_out) for size_in, size_out in zip(sizes[:-1], sizes[1:])]
+        layers = [nn.Linear(size_in, size_out) for size_in, size_out in zip(sizes[:-1], sizes[1:])]
         self.input_norm = nn.LayerNorm(n_features) if input_norm else nn.Identity()
         self.activation = nn.Identity() if activation is None else instantiate_class(
             "torch.nn.modules.activation", activation)
         self.dropout = nn.Dropout(dropout or 0.0)
         self.output_size = sizes[-1]
 
-        self.layers = nn.ModuleList(self.layers)
+        self.layers = nn.ModuleList(layers)
 
     def forward(self, x):
         """
