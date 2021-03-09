@@ -17,7 +17,7 @@ We hope that allRank will facilitate both research in neural LTR and its industr
 ## Features
 
 ### Implemented loss functions:
- 1. ListNet (For a binary and graded relevance)
+ 1. ListNet (for binary and graded relevance)
  2. ListMLE
  3. RankNet
  4. Ordinal loss
@@ -25,6 +25,7 @@ We hope that allRank will facilitate both research in neural LTR and its industr
  6. LambdaLoss
  7. ApproxNDCG
  8. RMSE
+ 9. NeuralNDCG (introduced in https://arxiv.org/pdf/2102.07831)
 
 ### Getting started guide
 
