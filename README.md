@@ -95,7 +95,7 @@ Additionally, if you use the NeuralNDCG loss function, please cite the correspon
   title={NeuralNDCG: Direct Optimisation of a Ranking Metric via Differentiable Relaxation of Sorting},
   author={Przemyslaw Pobrotyn and Radoslaw Bialobrzeski},
   journal={ArXiv},
-  year={2020},
+  year={2021},
   volume={abs/2102.07831}
 }
 ```
