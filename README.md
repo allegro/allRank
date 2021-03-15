@@ -89,6 +89,16 @@ This framework was developed to support the research project [Context-Aware Lear
   volume={abs/2005.10084}
 }
 ```
+Additionally, if you use the NeuralNDCG loss function, please cite the corresponding work, [NeuralNDCG: Direct Optimisation of a Ranking Metric via Differentiable Relaxation of Sorting](https://arxiv.org/abs/2102.07831):
+```
+@article{Pobrotyn2021NeuralNDCG,
+  title={NeuralNDCG: Direct Optimisation of a Ranking Metric via Differentiable Relaxation of Sorting},
+  author={Przemyslaw Pobrotyn and Radoslaw Bialobrzeski},
+  journal={ArXiv},
+  year={2020},
+  volume={abs/2102.07831}
+}
+```
 
 ## License
 
