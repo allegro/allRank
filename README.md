@@ -17,7 +17,7 @@ We hope that allRank will facilitate both research in neural LTR and its industr
 ## Features
 
 ### Implemented loss functions:
- 1. ListNet (For a binary and graded relevance)
+ 1. ListNet (for binary and graded relevance)
  2. ListMLE
  3. RankNet
  4. Ordinal loss
@@ -25,6 +25,7 @@ We hope that allRank will facilitate both research in neural LTR and its industr
  6. LambdaLoss
  7. ApproxNDCG
  8. RMSE
+ 9. NeuralNDCG (introduced in https://arxiv.org/pdf/2102.07831)
 
 ### Getting started guide
 
@@ -86,6 +87,16 @@ This framework was developed to support the research project [Context-Aware Lear
   journal={ArXiv},
   year={2020},
   volume={abs/2005.10084}
+}
+```
+Additionally, if you use the NeuralNDCG loss function, please cite the corresponding work, [NeuralNDCG: Direct Optimisation of a Ranking Metric via Differentiable Relaxation of Sorting](https://arxiv.org/abs/2102.07831):
+```
+@article{Pobrotyn2021NeuralNDCG,
+  title={NeuralNDCG: Direct Optimisation of a Ranking Metric via Differentiable Relaxation of Sorting},
+  author={Przemyslaw Pobrotyn and Radoslaw Bialobrzeski},
+  journal={ArXiv},
+  year={2021},
+  volume={abs/2102.07831}
 }
 ```
 

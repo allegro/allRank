@@ -7,8 +7,8 @@ HERE = pathlib.Path(__file__).parent
 README = (HERE / "README.md").read_text()
 
 reqs = [
-    "torch==1.6.0",
-    "torchvision==0.7.0",
+    "torch>=1.6.0, <=1.8.0",
+    "torchvision>=0.7.0, <= 0.9.0",
     "scikit-learn>=0.23.0",
     "pandas>=1.0.5",
     "numpy>=1.18.5",
@@ -16,12 +16,13 @@ reqs = [
     "attrs>=19.3.0",
     "flatten_dict>=0.3.0",
     "tensorboardX>=2.1.0",
-    "gcsfs==0.6.2"
+    "gcsfs==0.6.2",
+    "google-auth==1.27.1"
 ]
 
 setup(
     name="allRank",
-    version="1.3.2",
+    version="1.4.0",
     description="allRank is a framework for training learning-to-rank neural models",
     long_description=README,
     long_description_content_type="text/markdown",
