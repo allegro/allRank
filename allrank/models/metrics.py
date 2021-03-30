@@ -4,7 +4,8 @@ import torch
 from allrank.data.dataset_loading import PADDED_Y_VALUE
 
 
-def ndcg(y_pred, y_true, ats=None, gain_function=lambda x: torch.pow(2, x) - 1, padding_indicator=PADDED_Y_VALUE):
+def ndcg(y_pred, y_true, ats=None, gain_function=lambda x: torch.pow(2, x) - 1, padding_indicator=PADDED_Y_VALUE,
+         filler_value=1.0):
     """
     Normalized Discounted Cumulative Gain at k.
 
@@ -14,12 +15,13 @@ def ndcg(y_pred, y_true, ats=None, gain_function=lambda x: torch.pow(2, x) - 1, 
     :param ats: optional list of ranks for NDCG evaluation, if None, maximum rank is used
     :param gain_function: callable, gain function for the ground truth labels, e.g. torch.pow(2, x) - 1
     :param padding_indicator: an indicator of the y_true index containing a padded item, e.g. -1
+    :param filler_value: a filler NDCG value to use when there are no relevant items in listing
     :return: NDCG values for each slate and rank passed, shape [batch_size, len(ats)]
     """
     idcg = dcg(y_true, y_true, ats, gain_function, padding_indicator)
     ndcg_ = dcg(y_pred, y_true, ats, gain_function, padding_indicator) / idcg
     idcg_mask = idcg == 0
-    ndcg_[idcg_mask] = 0.  # if idcg == 0 , set ndcg to 0
+    ndcg_[idcg_mask] = filler_value  # if idcg == 0 , set ndcg to filler_value
 
     assert (ndcg_ < 0.0).sum() >= 0, "every ndcg should be non-negative"
 
