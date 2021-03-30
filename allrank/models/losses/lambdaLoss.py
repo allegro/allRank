@@ -95,12 +95,12 @@ def ndcgLoss2_scheme(G, D, *args):
     return deltas[None, :, :] * torch.abs(G[:, :, None] - G[:, None, :])
 
 
-def lamdbaRank_scheme(G, D, *args):
+def lambdaRank_scheme(G, D, *args):
     return torch.abs(torch.pow(D[:, :, None], -1.) - torch.pow(D[:, None, :], -1.)) * torch.abs(G[:, :, None] - G[:, None, :])
 
 
 def ndcgLoss2PP_scheme(G, D, *args):
-    return args[0] * ndcgLoss2_scheme(G, D) + lamdbaRank_scheme(G, D)
+    return args[0] * ndcgLoss2_scheme(G, D) + lambdaRank_scheme(G, D)
 
 
 def rankNet_scheme(G, D, *args):
