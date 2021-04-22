@@ -1,0 +1,68 @@
+{
+  "model": {
+    "fc_model": {
+      "sizes": [96],
+      "input_norm": false,
+      "activation": null,
+      "dropout": 0.0
+    },
+    "transformer": {
+      "N": 2,
+      "d_ff": 384,
+      "h": 1,
+      "positional_encoding" : null,
+      "dropout": 0.1
+    },
+    "post_model": {
+      "output_activation": null,
+      "d_output": 1
+    }
+  },
+  "data": {
+    "path": "MLSR-WEB30K-FOLD1-PATH",
+    "validation_ds_role": "test",
+    "num_workers": 1,
+    "batch_size": 64,
+    "slate_length": 240
+  },
+  "optimizer": {
+    "name": "Adam",
+    "args": {
+      "lr": 0.001
+    }
+  },
+  "lr_scheduler": {
+    "name": "StepLR",
+    "args": {
+      "step_size": 50,
+      "gamma": 0.1
+    }
+  },
+  "training": {
+    "epochs": 100,
+    "early_stopping_patience": 100,
+    "gradient_clipping_norm": null
+  },
+  "val_metric": "ndcg_5",
+  "metrics": [
+    "ndcg_5",
+    "ndcg_10",
+    "ndcg_30",
+    "ndcg_60"
+  ],
+  "loss": {
+    "name": "lambdaLoss",
+    "args": {
+      "weighing_scheme": "lambdaRank_scheme",
+      "k": null,
+      "mu": 10,
+      "sigma": 1.0
+    }
+  },
+  "detect_anomaly": false,
+  "expected_metrics" : {
+    "val": {
+      "ndcg_5": 0.50
+    }
+  }
+}

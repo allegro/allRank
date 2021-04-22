@@ -62,7 +62,7 @@ def lambdaLoss(y_pred, y_true, eps=DEFAULT_EPS, padded_value_indicator=PADDED_Y_
 
     # We are clamping the array entries to maintain correct backprop (log(0) and division by 0)
     scores_diffs = (y_pred_sorted[:, :, None] - y_pred_sorted[:, None, :]).clamp(min=-1e8, max=1e8)
-    scores_diffs[torch.isnan(scores_diffs)] = 0.
+    scores_diffs.masked_fill(torch.isnan(scores_diffs), 0.)
     weighted_probas = (torch.sigmoid(sigma * scores_diffs).clamp(min=eps) ** weights).clamp(min=eps)
     if reduction_log == "natural":
         losses = torch.log(weighted_probas)
@@ -71,11 +71,10 @@ def lambdaLoss(y_pred, y_true, eps=DEFAULT_EPS, padded_value_indicator=PADDED_Y_
     else:
         raise ValueError("Reduction logarithm base can be either natural or binary")
 
-    masked_losses = losses[padded_pairs_mask & ndcg_at_k_mask]
     if reduction == "sum":
-        loss = -torch.sum(masked_losses)
+        loss = -torch.sum(losses[padded_pairs_mask & ndcg_at_k_mask])
     elif reduction == "mean":
-        loss = -torch.mean(masked_losses)
+        loss = -torch.mean(losses[padded_pairs_mask & ndcg_at_k_mask])
     else:
         raise ValueError("Reduction method can be either sum or mean")
 
