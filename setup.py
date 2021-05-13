@@ -22,7 +22,7 @@ reqs = [
 
 setup(
     name="allRank",
-    version="1.4.2",
+    version="1.4.3",
     description="allRank is a framework for training learning-to-rank neural models",
     long_description=README,
     long_description_content_type="text/markdown",
