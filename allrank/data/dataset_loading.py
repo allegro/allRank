@@ -106,7 +106,8 @@ class LibSVMDataset(Dataset):
         """
         X = X.toarray()
 
-        groups = np.cumsum(np.unique(query_ids, return_counts=True)[1])
+        _, indices, counts = np.unique(query_ids, return_index=True, return_counts=True)
+        groups = np.cumsum(counts[np.argsort(indices)])
 
         self.X_by_qid = np.split(X, groups)[:-1]
         self.y_by_qid = np.split(y, groups)[:-1]
