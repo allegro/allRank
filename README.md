@@ -37,8 +37,15 @@ To help you get started, we provide a ```run_example.sh``` script which generate
 
 Since torch binaries are different for GPU and CPU and GPU version doesn't work on CPU - one must select & build appropriate docker image version.
 
-To do so pass `gpu` or `cpu` as `arch_version` build-arg in `docker build --build-arg arch_version=${ARCH_VERSION}`
-When calling `run_example.sh` you can select the proper version by a first cmd line argument e.g. `run_example.sh gpu ...` with `cpu` being the default if not specified.
+To do so pass `gpu` or `cpu` as `arch_version` build-arg in 
+
+```docker build --build-arg arch_version=${ARCH_VERSION}```
+
+When calling `run_example.sh` you can select the proper version by a first cmd line argument e.g. 
+
+```run_example.sh gpu ...```
+
+with `cpu` being the default if not specified.
 
 ### Configuring your model & training
 
