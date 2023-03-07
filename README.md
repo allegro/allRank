@@ -33,6 +33,13 @@ To help you get started, we provide a ```run_example.sh``` script which generate
  a Transformer model on the data using provided example ```config.json``` config file. Once you run the script, the dummy data can be found in `dummy_data` directory
  and the results of the experiment in `test_run` directory. To run the example, Docker is required.
 
+### Getting the right architecture version (GPU vs CPU-only)
+
+Since torch binaries are different for GPU and CPU and GPU version doesn't work on CPU - one must select & build appropriate docker image version.
+
+To do so pass `gpu` or `cpu` as `arch_version` build-arg in `docker build --build-arg arch_version=${ARCH_VERSION}`
+When calling `run_example.sh` you can select the proper version by a first cmd line argument e.g. `run_example.sh gpu ...` with `cpu` being the default if not specified.
+
 ### Configuring your model & training
 
 To train your own model, configure your experiment in ```config.json``` file and run  
