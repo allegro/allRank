@@ -9,15 +9,16 @@ README = (HERE / "README.md").read_text()
 reqs = [
     "torch>=1.6.0, <=1.8.0",
     "torchvision>=0.7.0, <= 0.9.0",
-    "scikit-learn>=0.23.0",
-    "pandas>=1.0.5",
-    "numpy>=1.18.5",
-    "scipy>=1.4.1",
+    "scikit-learn>=0.23.0, <=1.0",
+    "pandas>=1.0.5, <=1.3.5",
+    "numpy>=1.18.5, <=1.21.6",
+    "scipy>=1.4.1, <=1.7.3",
     "attrs>=19.3.0",
     "flatten_dict>=0.3.0",
     "tensorboardX>=2.1.0",
     "gcsfs==0.6.2",
-    "google-auth==1.27.1"
+    "google-auth>=2.15.0",
+    "fsspec <= 2023.1.0"
 ]
 
 setup(
