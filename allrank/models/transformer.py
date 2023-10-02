@@ -102,8 +102,8 @@ class SublayerConnection(nn.Module):
         :param sublayer: layer through which to pass the input prior to applying the sum
         :return: output of shape [batch_size, slate_length, output_dim]
         """
-        return x + self.dropout(
-            sublayer(self.norm(x)))
+        return self.norm(x + self.dropout(
+            sublayer(x)))
 
 
 class EncoderLayer(nn.Module):
