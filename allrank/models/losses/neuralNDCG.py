@@ -4,7 +4,6 @@ from allrank.data.dataset_loading import PADDED_Y_VALUE
 from allrank.models.losses import DEFAULT_EPS
 from allrank.models.losses.loss_utils import deterministic_neural_sort, sinkhorn_scaling, stochastic_neural_sort
 from allrank.models.metrics import dcg
-from allrank.models.model_utils import get_torch_device
 
 
 def neuralNDCG(y_pred, y_true, padded_value_indicator=PADDED_Y_VALUE, temperature=1., powered_relevancies=True, k=None,
@@ -24,7 +23,7 @@ def neuralNDCG(y_pred, y_true, padded_value_indicator=PADDED_Y_VALUE, temperatur
     :param log_scores: log_scores parameter for NeuralSort algorithm, used if stochastic == True
     :return: loss value, a torch.Tensor
     """
-    dev = get_torch_device()
+    dev = y_pred.device
 
     if k is None:
         k = y_true.shape[1]
@@ -90,7 +89,7 @@ def neuralNDCG_transposed(y_pred, y_true, padded_value_indicator=PADDED_Y_VALUE,
     :param tol: tolerance for Sinkhorn scaling
     :return: loss value, a torch.Tensor
     """
-    dev = get_torch_device()
+    dev = y_pred.device
 
     if k is None:
         k = y_true.shape[1]
@@ -107,7 +106,7 @@ def neuralNDCG_transposed(y_pred, y_true, padded_value_indicator=PADDED_Y_VALUE,
     P_hat_masked = sinkhorn_scaling(P_hat.view(P_hat.shape[0] * y_pred.shape[0], y_pred.shape[1], y_pred.shape[1]),
                                     mask.repeat_interleave(P_hat.shape[0], dim=0), tol=tol, max_iter=max_iter)
     P_hat_masked = P_hat_masked.view(P_hat.shape[0], y_pred.shape[0], y_pred.shape[1], y_pred.shape[1])
-    discounts = (torch.tensor(1) / torch.log2(torch.arange(y_true.shape[-1], dtype=torch.float) + 2.)).to(dev)
+    discounts = (torch.tensor(1) / torch.log2(torch.arange(y_true.shape[-1], dtype=y_pred.dtype) + 2.)).to(dev)
 
     # This takes care of the @k metric truncation - if something is @>k, it is useless and gets 0.0 discount
     discounts[k:] = 0.
@@ -133,4 +132,4 @@ def neuralNDCG_transposed(y_pred, y_true, padded_value_indicator=PADDED_Y_VALUE,
         return torch.tensor(0.)
 
     mean_ndcg = ndcg.sum() / ((~idcg_mask).sum() * ndcg.shape[0])  # type: ignore
-    return -1. * mean_ndcg  # -1 cause we want to maximize NDCG
+    return -1. * mean_ndcg  # -1 because we want to maximize NDCG

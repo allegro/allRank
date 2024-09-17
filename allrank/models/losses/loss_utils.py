@@ -2,7 +2,6 @@ import torch
 import numpy as np
 
 from allrank.models.losses import DEFAULT_EPS
-from allrank.models.model_utils import get_torch_device
 
 
 def sinkhorn_scaling(mat, mask=None, tol=1e-6, max_iter=50):
@@ -41,11 +40,11 @@ def deterministic_neural_sort(s, tau, mask):
     :param mask: mask indicating padded elements
     :return: approximate permutation matrices of shape [batch_size, slate_length, slate_length]
     """
-    dev = get_torch_device()
+    dev = s.device
 
     n = s.size()[1]
-    one = torch.ones((n, 1), dtype=torch.float32, device=dev)
-    s = s.masked_fill(mask[:, :, None], -1e8)
+    one = torch.ones((n, 1), dtype=s.dtype, device=dev)
+    s = s.masked_fill(mask[:, :, None], -1e4)
     A_s = torch.abs(s - s.permute(0, 2, 1))
     A_s = A_s.masked_fill(mask[:, :, None] | mask[:, None, :], 0.0)
 
@@ -54,7 +53,7 @@ def deterministic_neural_sort(s, tau, mask):
     temp = [n - m + 1 - 2 * (torch.arange(n - m, device=dev) + 1) for m in mask.squeeze(-1).sum(dim=1)]
     temp = [t.type(torch.float32) for t in temp]
     temp = [torch.cat((t, torch.zeros(n - len(t), device=dev))) for t in temp]
-    scaling = torch.stack(temp).type(torch.float32).to(dev)  # type: ignore
+    scaling = torch.stack(temp).type(s.dtype).to(dev)  # type: ignore
 
     s = s.masked_fill(mask[:, :, None], 0.0)
     C = torch.matmul(s, scaling.unsqueeze(-2))
@@ -95,7 +94,7 @@ def stochastic_neural_sort(s, n_samples, tau, mask, beta=1.0, log_scores=True, e
     :param eps: epsilon for the logarithm function
     :return: approximate permutation matrices of shape [n_samples, batch_size, slate_length, slate_length]
     """
-    dev = get_torch_device()
+    dev = s.device
 
     batch_size = s.size()[0]
     n = s.size()[1]
