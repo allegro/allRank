@@ -55,6 +55,7 @@
       "n": 4
     }
   },
+  "wandb_project_id": "allRank",
   "expected_metrics" : {
     "val": {
       "ndcg_5": 0.76

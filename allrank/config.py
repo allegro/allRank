@@ -76,6 +76,7 @@ class Config:
     expected_metrics = attrib(type=Dict[str, Dict[str, float]], default={})
     detect_anomaly = attrib(type=bool, default=False)
     click_model = attrib(type=Optional[NameArgsConfig], default=None)
+    wandb_project_id = attrib(type=str, default=None)
 
     @classmethod
     def from_json(cls, config_path):
@@ -97,6 +98,7 @@ class Config:
         config["metrics"] = cls._parse_metrics(config["metrics"])
         config["lr_scheduler"] = NameArgsConfig(**config["lr_scheduler"])
         config["loss"] = NameArgsConfig(**config["loss"])
+        config["wandb_project_id"] = config["wandb_project_id"]
         if "click_model" in config.keys():
             config["click_model"] = NameArgsConfig(**config["click_model"])
         return cls(**config)

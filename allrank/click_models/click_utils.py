@@ -10,7 +10,7 @@ from allrank.data.dataset_loading import PADDED_Y_VALUE
 def click_on_slates(slates: Union[Tuple[np.ndarray, np.ndarray], Tuple[torch.Tensor, torch.Tensor]],
                     click_model: ClickModel, include_empty: bool) -> Tuple[List[Union[np.ndarray, torch.Tensor]], List[List[int]]]:
     """
-    This metod runs a click model on a list of slates and returns new slates with `y` taken from clicks
+    This method runs a click model on a list of slates and returns new slates with `y` taken from clicks
 
     :param slates: a Tuple of X, y:
         X being a list of slates represented by document vectors

@@ -11,6 +11,7 @@ from allrank.models.model_utils import get_num_params, log_num_params
 from allrank.training.early_stop import EarlyStop
 from allrank.utils.ltr_logging import get_logger
 from allrank.utils.tensorboard_utils import TensorboardSummaryWriter
+import wandb
 
 logger = get_logger()
 
@@ -76,7 +77,7 @@ def get_current_lr(optimizer):
 
 
 def fit(epochs, model, loss_func, optimizer, scheduler, train_dl, valid_dl, config,
-        gradient_clipping_norm, early_stopping_patience, device, output_dir, tensorboard_output_path):
+        gradient_clipping_norm, early_stopping_patience, device, output_dir, tensorboard_output_path, wandb_logging=False):
     tensorboard_summary_writer = TensorboardSummaryWriter(tensorboard_output_path)
 
     num_params = get_num_params(model)
@@ -119,6 +120,17 @@ def fit(epochs, model, loss_func, optimizer, scheduler, train_dl, valid_dl, conf
         tensorboard_summary_writer.save_to_tensorboard(tensorboard_metrics_dict, epoch)
 
         logger.info(epoch_summary(epoch, train_loss, val_loss, train_metrics, val_metrics))
+        
+        if wandb_logging:
+            wandb.log({
+                "train_loss": train_loss,
+                "val_loss": val_loss,
+                **{
+                    f"{metric}_{k}": val_metrics.get(f"{metric}_{k}")
+                    for metric, ks in config.metrics.items()
+                    for k in ks
+                }
+            })
 
         current_val_metric_value = val_metrics.get(config.val_metric)
         if scheduler:

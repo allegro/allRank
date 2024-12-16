@@ -14,12 +14,12 @@ from allrank.utils.experiments import dump_experiment_result, assert_expected_me
 from allrank.utils.file_utils import create_output_dirs, PathsContainer, copy_local_to_gs
 from allrank.utils.ltr_logging import init_logger
 from allrank.utils.python_utils import dummy_context_mgr
-from argparse import ArgumentParser, Namespace
+from argparse import ArgumentParser, Namespace, BooleanOptionalAction
 from attr import asdict
 from functools import partial
 from pprint import pformat
 from torch import optim
-
+import wandb
 
 def parse_args() -> Namespace:
     parser = ArgumentParser("allRank")
@@ -27,6 +27,7 @@ def parse_args() -> Namespace:
     parser.add_argument("--run-id", help="Name of this run to be recorded (must be unique within output dir)",
                         required=True)
     parser.add_argument("--config-file-name", required=True, type=str, help="Name of json file with config")
+    parser.add_argument("--wandb", help="If true, log to wandb", action=BooleanOptionalAction)
 
     return parser.parse_args()
 
@@ -86,6 +87,12 @@ def run():
     else:
         scheduler = None
 
+    if args.wandb:
+        wandb.init(project=config.wandb_project_id, config=asdict(config))
+        for metric, ks in config.metrics.items():
+            for k in ks:
+                wandb.define_metric(f"{metric}_{k}", summary="max")
+
     with torch.autograd.detect_anomaly() if config.detect_anomaly else dummy_context_mgr():  # type: ignore
         # run training
         result = fit(
@@ -99,6 +106,7 @@ def run():
             device=dev,
             output_dir=paths.output_dir,
             tensorboard_output_path=paths.tensorboard_output_path,
+            wandb_logging=args.wandb,
             **asdict(config.training)
         )
 
@@ -106,6 +114,19 @@ def run():
 
     if urlparse(args.job_dir).scheme == "gs":
         copy_local_to_gs(paths.local_base_output_path, args.job_dir)
+    
+    if args.wandb:
+        abs_output_dir = os.path.abspath(paths.output_dir)
+
+        artifact = wandb.Artifact(name="experiment-results", type="results", description="Experiment results")
+        artifact.add_reference(f"file://{abs_output_dir}")
+        wandb.log_artifact(artifact)
+
+        artifact = wandb.Artifact(name="model", type="model", description="Trained model")
+        artifact.add_reference(f"file://{abs_output_dir}/model.pkl")
+        wandb.log_artifact(artifact)
+        
+        wandb.finish()
 
     assert_expected_metrics(result, config.expected_metrics)
 
